@@ -1,4 +1,5 @@
-// Plays the running game in headless Chrome and captures evidence for feature 3:
+// Plays the running game in headless Chrome and captures evidence for the
+// newest feature that changed the screen (feature 5):
 // screenshots plus results.json. Start the game first with `npm start`, then run
 // `npm run evidence`. Set CHROME to the browser binary if it is not in the default
 // macOS location.
@@ -7,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { launchBrowser, sleep } from './lib/browser.js';
 
-const OUT = fileURLToPath(new URL('../features/03-more-ways/evidence/', import.meta.url));
-const { js, open, shot, errors, close } = await launchBrowser(OUT);
+const OUT = fileURLToPath(new URL('../features/05-first-look/evidence/', import.meta.url));
+const { js, open, shot, cdp, errors, close } = await launchBrowser(OUT);
 
 const state = () => js(`({
   balance: Number(document.getElementById('balance').textContent.replace(/,/g, '')),
@@ -128,6 +129,46 @@ const broke = await state();
 await click('spin');
 await sleep(900);
 report.refill = { spinsToEmpty: guard, atEmpty: { balance: broke.balance, spin: broke.spin, bubble: broke.bubble }, afterRefill: await state() };
+
+// First look: layout, motion at rest, the top prize, the idle invitation.
+await open();
+const boxes = await js(`[...document.querySelectorAll('.topbar, .logo, .mascot-row, .cabinet, .win-panel, .controls')].map((e) => {
+  const r = e.getBoundingClientRect();
+  return { part: e.className.split(' ')[0], top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), right: Math.round(r.right) };
+})`);
+const running = () => js(`document.getAnimations().filter((a) => a.playState === 'running').length`);
+const prizes = [];
+for (const id of ['wagerDown', 'wagerUp', 'wagerUp']) {
+  await js(`document.getElementById('${id}').click()`);
+  prizes.push(await js(`[Number(document.getElementById('wager').textContent), document.getElementById('topPrize').textContent]`));
+}
+const firstLine = await js(`document.getElementById('bubble').textContent`);
+const movingAtRest = await running();
+await sleep(8600);
+const idleLine = await js(`document.getElementById('bubble').textContent`);
+report.firstLook = {
+  boxes,
+  logoLabel: await js(`document.querySelector('.logo svg').getAttribute('aria-label')`),
+  tabIcon: await js(`fetch(document.querySelector('link[rel=icon]').href).then((r) => r.status + ' ' + r.headers.get('content-type'))`),
+  movingAtRest,
+  topPrizeByWager: prizes,
+  firstLine,
+  idleLine,
+};
+
+// Reduced motion: nothing moves at rest, and a spin still completes.
+await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+await open('?stops=1,4,3');
+const movingReduced = await running();
+await js(`document.getElementById('spin').click()`);
+await settle();
+report.reducedMotion = { movingAtRest: movingReduced, afterSpin: await state() };
+await cdp('Emulation.setEmulatedMedia', { features: [] });
+
+// Laptop size.
+await cdp('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+await open();
+await shot('12-laptop');
 
 report.pageErrors = errors;
 writeFileSync(join(OUT, 'results.json'), JSON.stringify(report, null, 2) + '\n');

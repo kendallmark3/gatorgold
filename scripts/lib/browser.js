@@ -56,6 +56,8 @@ export async function launchBrowser(outDir) {
 
   return {
     errors,
+    // Sends a raw DevTools command to the page.
+    cdp,
     // Evaluates an expression in the page and returns its value.
     async js(expression) {
       const r = await cdp('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math), 2 (the playable machine), 3 (five win lines), and 4 (sound) are built. Cash Out and a saved balance are not.
+Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math), 2 (the playable machine), 3 (five win lines), 4 (sound), and 5 (logo and first look) are built. Cash Out and a saved balance are not.
 
 ## Commands
 
@@ -13,7 +13,7 @@ Plain JavaScript modules on Node 20, with no dependencies and no build or lint s
 - `npm start` serves the game at http://localhost:4747 (`PORT` overrides). The page loads ES modules, so it must be served; opening `index.html` as a file does not work.
 - `npm test` runs every test (Node's built-in runner).
 - `node --test --test-name-pattern="Wild Gator"` runs tests whose name matches.
-- `npm run evidence` plays the running game in headless Chrome and rewrites the screenshots and `results.json` under `features/03-more-ways/evidence/`. Needs `npm start` running and Chrome installed (`CHROME` overrides the path).
+- `npm run evidence` plays the running game in headless Chrome and rewrites the screenshots and `results.json` under `features/05-first-look/evidence/` (the output folder is set at the top of `scripts/capture-evidence.js`; point it at the feature being proven). Needs `npm start` running and Chrome installed (`CHROME` overrides the path).
 - `npm run sound-evidence` renders each sound in headless Chrome and measures it, and checks the game starts sounds at the right moments. Same requirements as `npm run evidence`.
 - `npm run report` prints the measured behavior of the slot math: exact return, hit rate, prize frequencies, and simulated sessions.
 
@@ -32,7 +32,9 @@ Plain JavaScript modules on Node 20, with no dependencies and no build or lint s
 
 The same engine modules run in Node and in the browser. The game state settles the balance the moment SPIN is pressed; the screen shows the wager leaving at once and the win arriving after the reels stop.
 
-The game is drawn at a fixed 390 x 844 and scaled to the window, so layout values are in pixels of that design size. `--cell` in the CSS and `CELL` in `reels.js` must match, and `CELL_X`/`CELL_Y` in `main.js` are the cell centres the win lines are drawn through.
+The game is drawn at a fixed 390 x 844 and scaled to the window, so layout values are in pixels of that design size. The stacked parts currently end at 820, leaving 8 pixels spare; anything added to the column needs height taken from something else. `--cell` in the CSS and `CELL` in `reels.js` must match, and `CELL_X`/`CELL_Y` in `main.js` are the cell centres the win lines are drawn through.
+
+Every idle animation must be listed in the `prefers-reduced-motion` rule at the end of `styles.css`; the evidence script checks nothing is running under reduced motion.
 
 For evidence, `?stops=5,3,14` forces every spin to those reel positions, `&autospin=1` spins on load, and `&speed=4` shortens the reel timings.
 

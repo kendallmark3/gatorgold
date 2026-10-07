@@ -2,7 +2,7 @@
 
 A playful, alligator-themed slot game built for Stephanie. It should feel like a real animated slot machine, played with virtual tokens only.
 
-**Status:** Progressive Intent v1. Features 1 to 4 are built: the game is playable in a browser, with five win lines and sound. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
+**Status:** Progressive Intent v1. Features 1 to 5 are built: the game is playable in a browser, with five win lines, sound, and a logo. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
 
 ## Play it
 
@@ -39,7 +39,7 @@ Direction from Mark, ahead of any implementation:
 
 Mark approved the first game-screen mockup on 2026-10-06 as the visual direction: swamp green and heavy gold, a gold cabinet with marquee bulbs, three reels showing three rows, a gator mascot with a speech bubble, and a big red SPIN button. The mockup is a private design canvas at https://claude.ai/artifact/TkoBz7CcRfwNAtrHL8sdSh.
 
-The numbers shown in it are placeholders, and Wild Gator and the treasure chest are not drawn yet.
+The numbers shown in it are placeholders. The built game has since moved on from it: PAYS sits where Cash Out was, a logo with an emblem replaced the plain name, and the machine gained a marquee.
 
 ## The hard part: game design
 
@@ -68,7 +68,7 @@ No feature is designed ahead of its turn. [intent.md](intent.md) stays the overa
 
 ### Proposed feature order
 
-Each line is one feature with its own intent under [features/](features/). Features 1 to 4 are built; the rest are a proposal.
+Each line is one feature with its own intent under [features/](features/). Features 1 to 5 are built; the rest are a proposal.
 
 | # | Feature | What it proves |
 | --- | --- | --- |
@@ -76,9 +76,10 @@ Each line is one feature with its own intent under [features/](features/). Featu
 | 2 | The machine (done) | A game that actually works in the browser: spin, watch the reels roll and stop, and win. See the [evidence](features/02-machine/evidence.md) |
 | 3 | More ways to win (done) | Five win lines and coins anywhere, so more than half of spins pay something while the house still wins over a long session. See the [evidence](features/03-more-ways/evidence.md) |
 | 4 | Sound (done) | Every moment of a spin has a casino sound, with an on/off control. See the [evidence](features/04-sound/evidence.md) |
-| 5 | Gators | The characters have more personality and react to what happens |
-| 6 | Cash Out | The "See Mark" redemption request appears and stays visible |
-| 7 | Saved balance | The balance survives closing the game |
+| 5 | First look (done) | A logo, and a screen that moves and invites a spin before it is touched. See the [evidence](features/05-first-look/evidence.md) |
+| 6 | Gators | The characters have more personality and react to what happens |
+| 7 | Cash Out | The "See Mark" redemption request appears and stays visible |
+| 8 | Saved balance | The balance survives closing the game |
 
 ## v1 scope
 

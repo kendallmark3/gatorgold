@@ -21,6 +21,8 @@ const STOP_TIMES = [1100, 1600, 2100];
 const SUSPENSE = 1500;
 const BIG_WIN_SHOW = 2800;
 const IDLE_DETAIL = `${LINES.length} lines pay on every spin`;
+const IDLE_AFTER = 8000;
+const TOP_PRIZE = Math.max(...Object.values(PAYTABLE.three));
 
 // One colour per win line, in the order of LINES.
 const LINE_COLORS = ['#ffd54a', '#ff7ab8', '#5fd6ff', '#ff9a4d', '#c4f25a'];
@@ -55,7 +57,9 @@ const opening = quietStops();
 const reels = [...document.querySelectorAll('.reel')].map((el, i) => createReel(el, REEL_STRIPS[i], opening[i]));
 
 function fit() {
-  const scale = Math.min(innerWidth / 390, innerHeight / 844, 1.4);
+  // On anything wider than a phone, leave a margin so the frame is not cut off.
+  const margin = innerWidth > 480 ? 32 : 0;
+  const scale = Math.min(innerWidth / 390, (innerHeight - margin) / 844, 1.4);
   document.documentElement.style.setProperty('--scale', scale);
 }
 addEventListener('resize', fit);
@@ -90,6 +94,7 @@ function showBalance(value, ms = 0) {
 
 function updateControls() {
   $('wager').textContent = game.wager;
+  $('topPrize').textContent = format(payoutFor(TOP_PRIZE, game.wager));
   $('wagerDown').disabled = busy || !game.canStepWager(-1);
   $('wagerUp').disabled = busy || !game.canStepWager(1);
   $('paysOpen').disabled = busy;
@@ -99,6 +104,22 @@ function updateControls() {
   spin.classList.toggle('small-label', refill);
   spin.disabled = busy;
   spin.classList.toggle('ready', !busy);
+}
+
+// When nobody has touched the game for a while, the gator invites a spin.
+let idleTimer = null;
+function idleLines() {
+  const top = `${TOP_PRIZE / LINES.length}x`;
+  return ['Tap SPIN to play!', 'The gators feel lucky...', `Three Wild Gators pays ${top}!`, `${LINES.length} lines. One big red button.`];
+}
+function restartIdle() {
+  clearInterval(idleTimer);
+  let next = 1;
+  idleTimer = setInterval(() => {
+    if (busy || $('pays').open || game.needsRefill) return;
+    const lines = idleLines();
+    say(lines[next++ % lines.length]);
+  }, IDLE_AFTER);
 }
 
 function polyline(points, className, color) {
@@ -219,6 +240,7 @@ function bigWinPending(window) {
 
 async function spin() {
   if (busy || $('pays').open) return;
+  restartIdle();
   if (game.needsRefill) {
     game.refill();
     sound.refill();
@@ -366,6 +388,14 @@ addEventListener('keydown', (event) => {
   spin();
 });
 
+$('lineDots').replaceChildren(
+  ...LINE_COLORS.map((color) => {
+    const dot = document.createElement('i');
+    dot.style.background = color;
+    return dot;
+  }),
+);
 $('balance').textContent = format(game.balance);
 updateControls();
+restartIdle();
 if (params.has('autospin')) document.fonts.ready.then(spin);
