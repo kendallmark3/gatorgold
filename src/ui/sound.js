@@ -226,6 +226,15 @@ export function createSound({ context = null, muted = false } = {}) {
       coinShower(0.7, 2.0, 46);
     },
 
+    // The meter filling: a rising run that climbs two octaves, then a shimmer.
+    bonus() {
+      if (!ready()) return;
+      const run = [C5, E5, G5, C6, E6, G6, C6 * 2];
+      melody(run.map((freq, i) => [freq, i * 0.09, i === run.length - 1 ? 0.9 : 0.12]), 0.3);
+      tone({ type: 'sawtooth', from: C5 / 2, to: C5, at: 0, length: 0.63, gain: 0.08 });
+      coinShower(0.6, 1.4, 30);
+    },
+
     // Free tokens arriving.
     refill() {
       if (!ready()) return;

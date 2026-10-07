@@ -2,7 +2,7 @@
 
 A playful, alligator-themed slot game built for Stephanie. It should feel like a real animated slot machine, played with virtual tokens only.
 
-**Status:** Progressive Intent v1. Features 1 to 6 are built: the game is playable in a browser on a phone, tablet, or laptop, with five win lines, sound, and a logo. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
+**Status:** Progressive Intent v1. Features 1 to 7 are built: the game is playable in a browser on a phone, tablet, or laptop, with five win lines, a free-spins bonus, sound, and a logo. The next step is Stephanie playing it. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
 
 ## Play it
 
@@ -68,7 +68,7 @@ No feature is designed ahead of its turn. [intent.md](intent.md) stays the overa
 
 ### Proposed feature order
 
-Each line is one feature with its own intent under [features/](features/). Features 1 to 6 are built; the rest are a proposal.
+Each line is one feature with its own intent under [features/](features/). Features 1 to 7 are built. The rest are a proposal, to be reconsidered after Stephanie plays.
 
 | # | Feature | What it proves |
 | --- | --- | --- |
@@ -78,9 +78,10 @@ Each line is one feature with its own intent under [features/](features/). Featu
 | 4 | Sound (done) | Every moment of a spin has a casino sound, with an on/off control. See the [evidence](features/04-sound/evidence.md) |
 | 5 | First look (done) | A logo, and a screen that moves and invites a spin before it is touched. See the [evidence](features/05-first-look/evidence.md) |
 | 6 | Fill the screen (done) | A swamp scene and side art around the machine, an unbroken logo, and correct sizing on phone, tablet, and laptop. See the [evidence](features/06-fill-the-screen/evidence.md) |
-| 7 | Gators | The characters have more personality and react to what happens |
+| 7 | Free spins (done) | A meter that fills with each paid spin and awards five free spins the game plays itself, each a winner; plus moving gators and a fuller wide screen. See the [evidence](features/07-free-spins/evidence.md) |
 | 8 | Cash Out | The "See Mark" redemption request appears and stays visible |
-| 9 | Saved balance | The balance survives closing the game |
+| 9 | Saved balance | The balance and the free-spins meter survive closing the game |
+| 10 | Gators | The characters have more personality and react to what happens |
 
 ## v1 scope
 
@@ -151,7 +152,7 @@ The intent leaves these to the implementer or does not address them. Each has a 
 | What happens to the balance after Cash Out? | Affects accounting and what "remains visible" means | Balance resets to the starting amount; the request stays on screen with its amount and date |
 | Does the balance survive closing the game? | A redemption request that vanishes on reload cannot be settled | Save balance and pending redemption in the browser |
 | How many reels and lines? | The intent warns against burying v1 under paylines, but one line proved boring in play | Decided in feature 3: three reels, five lines, all played on every spin |
-| What return and hit frequency should the game target? | Sets how long a balance lasts and how often Stephanie wins | Set in feature 3: 95% return, 56% of spins pay something, 21% pay the wager back or more |
+| What return and hit frequency should the game target? | Sets how long a balance lasts and how often Stephanie wins | Set in feature 7: 97% return with free spins included (79% from paid spins), 56% of spins pay something, 18% pay the wager back or more |
 | Starting balance and wager steps? | Needed for the three-wager evidence | 1,000 tokens; wagers of 10, 25, and 50 |
 | How are the gators drawn? | Five distinct characters with personality is a large part of the casino look | Hand-built vector art in the page, no external assets |
 | Is sound in v1? | The intent lists it as one option, not a requirement | Decided in feature 4: yes, with an on/off control |

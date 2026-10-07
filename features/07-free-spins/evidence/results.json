@@ -1,0 +1,636 @@
+{
+  "atRest": {
+    "balance": 1000,
+    "wager": 25,
+    "title": "GOOD LUCK",
+    "detail": "5 lines pay on every spin",
+    "win": 0,
+    "bubble": "Tap SPIN to play!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 0,
+    "linesDrawn": 0,
+    "view": [
+      [
+        "coin",
+        "queen",
+        "diamond"
+      ],
+      [
+        "baby",
+        "melon",
+        "flower"
+      ],
+      [
+        "flower",
+        "happy",
+        "melon"
+      ]
+    ],
+    "bigwin": false
+  },
+  "02-loss": {
+    "stops": "0,2,3",
+    "stopTimes": [
+      1263,
+      1764,
+      2265
+    ],
+    "balance": 975,
+    "wager": 25,
+    "title": "NO WIN",
+    "detail": "Spin again!",
+    "win": 0,
+    "bubble": "So close! Go again.",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 0,
+    "linesDrawn": 0,
+    "view": [
+      [
+        "coin",
+        "melon",
+        "baby"
+      ],
+      [
+        "happy",
+        "flower",
+        "cool"
+      ],
+      [
+        "diamond",
+        "baby",
+        "flower"
+      ]
+    ],
+    "bigwin": false
+  },
+  "03-two-coins": {
+    "stops": "0,0,3",
+    "stopTimes": [
+      1158,
+      1657,
+      2157
+    ],
+    "balance": 985,
+    "wager": 25,
+    "title": "SMALL WIN",
+    "detail": "2 gold coins",
+    "win": 10,
+    "bubble": "Something is better than nothing!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 2,
+    "linesDrawn": 0,
+    "view": [
+      [
+        "coin",
+        "melon",
+        "baby"
+      ],
+      [
+        "melon",
+        "coin",
+        "happy"
+      ],
+      [
+        "diamond",
+        "baby",
+        "flower"
+      ]
+    ],
+    "bigwin": false
+  },
+  "04-gator-line": {
+    "stops": "1,1,3",
+    "stopTimes": [
+      1145,
+      1646,
+      2145
+    ],
+    "balance": 990,
+    "wager": 25,
+    "title": "SMALL WIN",
+    "detail": "Any 3 gators",
+    "win": 15,
+    "bubble": "A snack for the gators.",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 3,
+    "linesDrawn": 1,
+    "view": [
+      [
+        "melon",
+        "baby",
+        "happy"
+      ],
+      [
+        "coin",
+        "happy",
+        "flower"
+      ],
+      [
+        "diamond",
+        "baby",
+        "flower"
+      ]
+    ],
+    "bigwin": false
+  },
+  "05-diagonal-gators": {
+    "stops": "2,1,2",
+    "stopTimes": [
+      1126,
+      1626,
+      2126
+    ],
+    "balance": 990,
+    "wager": 25,
+    "title": "SMALL WIN",
+    "detail": "Any 3 gators",
+    "win": 15,
+    "bubble": "Something is better than nothing!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 3,
+    "linesDrawn": 1,
+    "view": [
+      [
+        "baby",
+        "happy",
+        "melon"
+      ],
+      [
+        "coin",
+        "happy",
+        "flower"
+      ],
+      [
+        "chest",
+        "diamond",
+        "baby"
+      ]
+    ],
+    "bigwin": false
+  },
+  "06-three-baby": {
+    "stops": "1,4,3",
+    "stopTimes": [
+      1156,
+      1657,
+      2157
+    ],
+    "balance": 1025,
+    "wager": 25,
+    "title": "WIN!",
+    "detail": "3 x Baby Gator",
+    "win": 50,
+    "bubble": "Three Baby Gators! Chomp!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 3,
+    "linesDrawn": 1,
+    "view": [
+      [
+        "melon",
+        "baby",
+        "happy"
+      ],
+      [
+        "cool",
+        "baby",
+        "wild"
+      ],
+      [
+        "diamond",
+        "baby",
+        "flower"
+      ]
+    ],
+    "bigwin": false
+  },
+  "07-several-lines": {
+    "stops": "0,0,24",
+    "stopTimes": [
+      1135,
+      1656,
+      2158
+    ],
+    "balance": 1125,
+    "wager": 25,
+    "title": "WIN!",
+    "detail": "2 lines + coins",
+    "win": 150,
+    "bubble": "Three Gold coins! Chomp!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 5,
+    "linesDrawn": 2,
+    "view": [
+      [
+        "coin",
+        "melon",
+        "baby"
+      ],
+      [
+        "melon",
+        "coin",
+        "happy"
+      ],
+      [
+        "happy",
+        "cool",
+        "wild"
+      ]
+    ],
+    "bigwin": false
+  },
+  "09-near-miss": {
+    "stops": "16,20,0",
+    "stopTimes": [
+      1152,
+      1654,
+      3652
+    ],
+    "balance": 975,
+    "wager": 25,
+    "title": "NO WIN",
+    "detail": "Spin again!",
+    "win": 0,
+    "bubble": "So close! Go again.",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 0,
+    "linesDrawn": 0,
+    "view": [
+      [
+        "diamond",
+        "queen",
+        "cool"
+      ],
+      [
+        "happy",
+        "queen",
+        "diamond"
+      ],
+      [
+        "melon",
+        "coin",
+        "chest"
+      ]
+    ],
+    "bigwin": false
+  },
+  "08-big-win": {
+    "stops": "6,4,7",
+    "stopTimes": [
+      1152,
+      1652,
+      3659
+    ],
+    "celebrationShowing": true,
+    "balance": 1615,
+    "wager": 25,
+    "title": "BIG WIN!",
+    "detail": "2 lines",
+    "win": 640,
+    "bubble": "Three Queen Gators! Somebody call Mark!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 5,
+    "linesDrawn": 2,
+    "view": [
+      [
+        "cool",
+        "flower",
+        "wild"
+      ],
+      [
+        "cool",
+        "baby",
+        "wild"
+      ],
+      [
+        "coin",
+        "baby",
+        "queen"
+      ]
+    ],
+    "bigwin": false
+  },
+  "wagerSteps": [
+    [
+      50,
+      false,
+      true
+    ],
+    [
+      50,
+      false,
+      true
+    ],
+    [
+      25,
+      false,
+      false
+    ],
+    [
+      10,
+      true,
+      false
+    ],
+    [
+      10,
+      true,
+      false
+    ]
+  ],
+  "paysRows": 13,
+  "randomPlay": {
+    "spins": 60,
+    "winsSeen": 35,
+    "smallWins": 25,
+    "mismatches": 0,
+    "endBalance": 1037
+  },
+  "refill": {
+    "spinsToEmpty": 20,
+    "atEmpty": {
+      "balance": 0,
+      "spin": "REFILL",
+      "bubble": "Out of tokens! Tap REFILL, it is on the house."
+    },
+    "afterRefill": {
+      "balance": 1000,
+      "wager": 50,
+      "title": "GOOD LUCK",
+      "detail": "5 lines pay on every spin",
+      "win": 0,
+      "bubble": "Fresh tokens, on the house!",
+      "spin": "SPIN",
+      "spinDisabled": false,
+      "lit": 0,
+      "linesDrawn": 0,
+      "view": [
+        [
+          "coin",
+          "melon",
+          "baby"
+        ],
+        [
+          "happy",
+          "flower",
+          "cool"
+        ],
+        [
+          "diamond",
+          "baby",
+          "flower"
+        ]
+      ],
+      "bigwin": false
+    }
+  },
+  "meter": [
+    "40 spins to go",
+    "39 spins to go",
+    "38 spins to go",
+    "37 spins to go",
+    "at 50: 40 spins to go",
+    "back at 25: 37 spins to go"
+  ],
+  "bonus": {
+    "balanceBefore": 1000,
+    "wager": 25,
+    "freeSpinsSeen": [
+      "FREE SPIN 1 OF 5",
+      "FREE SPIN 2 OF 5",
+      "FREE SPIN 3 OF 5",
+      "FREE SPIN 4 OF 5",
+      "FREE SPIN 5 OF 5"
+    ],
+    "controlsLockedThroughout": true,
+    "totalShown": 100,
+    "balanceAfter": 1075,
+    "balanceAddsUp": true,
+    "meterAfter": "40 spins to go",
+    "panel": [
+      "FREE SPINS",
+      "5 spins on the house"
+    ],
+    "spinEnabledAgain": true
+  },
+  "firstLook": {
+    "boxes": [
+      {
+        "part": "topbar",
+        "top": 16,
+        "bottom": 60,
+        "left": 16,
+        "right": 374
+      },
+      {
+        "part": "logo",
+        "top": 73,
+        "bottom": 145,
+        "left": 16,
+        "right": 374
+      },
+      {
+        "part": "mascot-row",
+        "top": 158,
+        "bottom": 242,
+        "left": 16,
+        "right": 374
+      },
+      {
+        "part": "cabinet",
+        "top": 224,
+        "bottom": 622,
+        "left": 16,
+        "right": 374
+      },
+      {
+        "part": "win-panel",
+        "top": 635,
+        "bottom": 691,
+        "left": 16,
+        "right": 374
+      },
+      {
+        "part": "controls",
+        "top": 704,
+        "bottom": 828,
+        "left": 16,
+        "right": 374
+      }
+    ],
+    "logoLabel": "Gator Gold",
+    "tabIcon": "200 image/svg+xml",
+    "movingAtRest": 62,
+    "topPrizeByWager": [
+      [
+        10,
+        "1,000"
+      ],
+      [
+        25,
+        "2,500"
+      ],
+      [
+        50,
+        "5,000"
+      ]
+    ],
+    "firstLine": "Tap SPIN to play!",
+    "idleLine": "The gators feel lucky..."
+  },
+  "reducedMotion": {
+    "movingAtRest": 0,
+    "afterSpin": {
+      "balance": 1025,
+      "wager": 25,
+      "title": "WIN!",
+      "detail": "3 x Baby Gator",
+      "win": 50,
+      "bubble": "Three Baby Gators! Chomp!",
+      "spin": "SPIN",
+      "spinDisabled": false,
+      "lit": 3,
+      "linesDrawn": 1,
+      "view": [
+        [
+          "melon",
+          "baby",
+          "happy"
+        ],
+        [
+          "cool",
+          "baby",
+          "wild"
+        ],
+        [
+          "diamond",
+          "baby",
+          "flower"
+        ]
+      ],
+      "bigwin": false
+    }
+  },
+  "sizes": {
+    "12-phone-small": {
+      "screen": [
+        375,
+        667
+      ],
+      "machine": [
+        308,
+        667
+      ],
+      "fullyOnScreen": true,
+      "shapeKept": true,
+      "fillsOneDimension": true,
+      "sceneryShown": 0,
+      "sceneryClearOfMachine": true,
+      "sceneryOnScreen": true,
+      "spinButton": 93,
+      "logoText": "GATOR GOLD"
+    },
+    "13-phone": {
+      "screen": [
+        390,
+        844
+      ],
+      "machine": [
+        390,
+        844
+      ],
+      "fullyOnScreen": true,
+      "shapeKept": true,
+      "fillsOneDimension": true,
+      "sceneryShown": 0,
+      "sceneryClearOfMachine": true,
+      "sceneryOnScreen": true,
+      "spinButton": 118,
+      "logoText": "GATOR GOLD"
+    },
+    "14-phone-tall": {
+      "screen": [
+        412,
+        915
+      ],
+      "machine": [
+        412,
+        892
+      ],
+      "fullyOnScreen": true,
+      "shapeKept": true,
+      "fillsOneDimension": true,
+      "sceneryShown": 0,
+      "sceneryClearOfMachine": true,
+      "sceneryOnScreen": true,
+      "spinButton": 125,
+      "logoText": "GATOR GOLD"
+    },
+    "15-tablet-upright": {
+      "screen": [
+        820,
+        1180
+      ],
+      "machine": [
+        534,
+        1156
+      ],
+      "fullyOnScreen": true,
+      "shapeKept": true,
+      "fillsOneDimension": true,
+      "sceneryShown": 2,
+      "sceneryClearOfMachine": true,
+      "sceneryOnScreen": true,
+      "spinButton": 162,
+      "logoText": "GATOR GOLD"
+    },
+    "16-tablet-sideways": {
+      "screen": [
+        1180,
+        820
+      ],
+      "machine": [
+        368,
+        796
+      ],
+      "fullyOnScreen": true,
+      "shapeKept": true,
+      "fillsOneDimension": true,
+      "sceneryShown": 2,
+      "sceneryClearOfMachine": true,
+      "sceneryOnScreen": true,
+      "spinButton": 111,
+      "logoText": "GATOR GOLD"
+    },
+    "17-laptop": {
+      "screen": [
+        1440,
+        900
+      ],
+      "machine": [
+        405,
+        876
+      ],
+      "fullyOnScreen": true,
+      "shapeKept": true,
+      "fillsOneDimension": true,
+      "sceneryShown": 2,
+      "sceneryClearOfMachine": true,
+      "sceneryOnScreen": true,
+      "spinButton": 123,
+      "logoText": "GATOR GOLD"
+    }
+  },
+  "reducedMotionLaptop": {
+    "movingAtRest": 0
+  },
+  "laptopMovingAtRest": 74,
+  "pageErrors": []
+}

@@ -1,5 +1,6 @@
-import { REEL_STRIPS, LINES } from './config.js';
-import { resultAt, spin, payoutFor } from './engine.js';
+import { REEL_STRIPS, LINES, BONUS } from './config.js';
+import { resultAt } from './engine.js';
+import { createGame } from '../game/state.js';
 
 // Exact figures from every possible combination of reel stops.
 export function exactStats() {
@@ -32,9 +33,22 @@ export function exactStats() {
     }
   }
 
+  // A free spin is a uniform draw from the winning positions, so on average it
+  // pays what a winning paid spin pays. One bonus arrives per full meter.
+  const baseReturn = returned / total;
+  const freeSpinAverage = returned / hits;
+  const bonusReturn = (BONUS.freeSpins * freeSpinAverage) / BONUS.spinsToFill;
+
   return {
     total,
-    returnRate: returned / total,
+    // Return from paid spins alone, from the bonus, and both together, each
+    // as a share of tokens wagered.
+    baseReturn,
+    bonusReturn,
+    returnRate: baseReturn + bonusReturn,
+    // What one free spin, and one whole bonus, pays on average, in wagers.
+    freeSpinAverage,
+    bonusAverage: BONUS.freeSpins * freeSpinAverage,
     // Spins that pay anything at all.
     hitRate: hits / total,
     // Spins that pay the wager back or more.
@@ -45,6 +59,7 @@ export function exactStats() {
       rule,
       perSpin: count / total,
       returnShare: units / LINES.length / returned,
+      returned: units / LINES.length / total,
     })),
     byMultiplier: [...byMultiplier.entries()]
       .sort(([x], [y]) => x - y)
@@ -63,15 +78,18 @@ export function seededRng(seed) {
   };
 }
 
-// Plays one session at a fixed wager until the spins run out or the balance
-// cannot cover the wager.
+// Plays one session at a fixed wager, free spins included, until the paid
+// spins run out or the balance cannot cover the wager.
 export function simulateSession({ rng, balance, wager, spins }) {
+  const game = createGame({ balance, wager });
   let played = 0;
-  while (played < spins && balance >= wager) {
-    balance += payoutFor(spin(rng).units, wager) - wager;
+  let bonuses = 0;
+  while (played < spins && game.wager === wager && game.canSpin()) {
+    if (game.spin({ rng }).bonusAwarded) bonuses += 1;
     played += 1;
+    while (game.freeSpinsLeft > 0) game.freeSpin({ rng });
   }
-  return { balance, played, bust: balance < wager };
+  return { balance: game.balance, played, bonuses, bust: game.balance < wager };
 }
 
 export function simulateSessions({ seed, sessions, balance, wager, spins }) {

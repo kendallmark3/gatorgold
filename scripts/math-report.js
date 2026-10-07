@@ -1,5 +1,5 @@
 // Prints the measured behavior of the slot math. Run with `npm run report`.
-import { SYMBOLS, REEL_STRIPS, LINES, PAYTABLE, BIG_WIN_AT, WAGERS, STARTING_BALANCE } from '../src/math/config.js';
+import { SYMBOLS, REEL_STRIPS, LINES, PAYTABLE, BONUS, BIG_WIN_AT, WAGERS, STARTING_BALANCE } from '../src/math/config.js';
 import { exactStats, simulateSessions } from '../src/math/analysis.js';
 
 const pct = (x, digits = 2) => `${(x * 100).toFixed(digits)}%`;
@@ -10,10 +10,21 @@ console.log('## Exact figures\n');
 console.log(`From all ${stats.total.toLocaleString('en-US')} reel positions, with ${LINES.length} lines in play.\n`);
 console.log('| Measure | Value |');
 console.log('| --- | --- |');
-console.log(`| Return to player | ${pct(stats.returnRate)} |`);
+console.log(`| Return to player, free spins included | ${pct(stats.returnRate)} |`);
+console.log(`| Return from paid spins alone | ${pct(stats.baseReturn)} |`);
+console.log(`| Return from free spins | ${pct(stats.bonusReturn)} |`);
 console.log(`| Spins that pay anything | ${pct(stats.hitRate)} (one in ${(1 / stats.hitRate).toFixed(1)}) |`);
 console.log(`| Spins that pay the wager back or more | ${pct(stats.winRate)} (one in ${(1 / stats.winRate).toFixed(1)}) |`);
 console.log(`| Big wins (${BIG_WIN_AT}x the wager or more) | ${pct(stats.bigWinRate)} (one in ${Math.round(1 / stats.bigWinRate)}) |`);
+
+console.log('\n## Free spins\n');
+console.log('| Measure | Value |');
+console.log('| --- | --- |');
+console.log(`| Paid spins to fill the meter | ${BONUS.spinsToFill} |`);
+console.log(`| Free spins awarded | ${BONUS.freeSpins} |`);
+console.log(`| Chance a free spin pays | 100%, by rule |`);
+console.log(`| Average free spin pays | ${stats.freeSpinAverage.toFixed(2)}x the wager |`);
+console.log(`| Average bonus pays | ${stats.bonusAverage.toFixed(2)}x the wager |`);
 
 console.log('\n## Payout table\n');
 console.log('Prizes as a multiple of the wager.\n');
@@ -43,7 +54,7 @@ const bands = [
   [`${BIG_WIN_AT}x to under 30x`, (m) => m >= BIG_WIN_AT && m < 30],
   ['30x or more', (m) => m >= 30],
 ];
-console.log('\n## How big each spin pays\n');
+console.log('\n## How big each paid spin pays\n');
 console.log('| Spin pays | Share of spins | About one in |');
 console.log('| --- | --- | --- |');
 for (const [label, inBand] of bands) {
@@ -54,7 +65,7 @@ const top = stats.byMultiplier[stats.byMultiplier.length - 1];
 console.log(`\nThe largest possible spin pays ${top.multiplier}x the wager.`);
 
 console.log('\n## Simulated sessions\n');
-console.log(`5,000 sessions per row, each starting with ${STARTING_BALANCE.toLocaleString('en-US')} tokens.\n`);
+console.log(`5,000 sessions per row, each starting with ${STARTING_BALANCE.toLocaleString('en-US')} tokens. Spins are paid spins; free spins are played as they are earned.\n`);
 console.log('| Wager | Spins | Ran out | Ended ahead | Low (10th pct) | Median | High (90th pct) |');
 console.log('| --- | --- | --- | --- | --- | --- | --- |');
 for (const wager of WAGERS) {

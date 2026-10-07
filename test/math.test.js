@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SYMBOLS, REEL_STRIPS, LINES, PAYTABLE, BIG_WIN_AT, WAGERS, STARTING_BALANCE } from '../src/math/config.js';
-import { evaluate, evaluateLine, resultAt, spin, payoutFor } from '../src/math/engine.js';
-import { exactStats, seededRng, simulateSessions } from '../src/math/analysis.js';
+import { SYMBOLS, REEL_STRIPS, LINES, PAYTABLE, BONUS, BIG_WIN_AT, WAGERS, STARTING_BALANCE } from '../src/math/config.js';
+import { evaluate, evaluateLine, resultAt, spin, spinWinning, payoutFor } from '../src/math/engine.js';
+import { exactStats, seededRng, simulateSession, simulateSessions } from '../src/math/analysis.js';
 
 const stats = exactStats();
 
@@ -112,8 +112,40 @@ test('wins are tiered as small, normal, or big', () => {
   assert.ok(resultAt([6, 4, 7]).multiplier >= BIG_WIN_AT);
 });
 
-test('long-run return is between 93% and 97%', () => {
-  assert.ok(stats.returnRate >= 0.93 && stats.returnRate <= 0.97, `return is ${stats.returnRate}`);
+test('long-run return, free spins included, is between 94% and 98%', () => {
+  assert.ok(stats.returnRate >= 0.94 && stats.returnRate <= 0.98, `return is ${stats.returnRate}`);
+  assert.ok(Math.abs(stats.baseReturn + stats.bonusReturn - stats.returnRate) < 1e-12);
+});
+
+test('free spins carry a real share of the return, but less than paid spins', () => {
+  assert.ok(stats.bonusReturn >= 0.1 && stats.bonusReturn <= 0.25, `bonus return is ${stats.bonusReturn}`);
+  assert.ok(stats.baseReturn > stats.bonusReturn);
+});
+
+test('a free spin always wins, and every winning position can come up', () => {
+  const rng = seededRng(5);
+  const seen = new Set();
+  for (let i = 0; i < 20000; i++) {
+    const r = spinWinning(rng);
+    assert.ok(r.units > 0);
+    seen.add(r.stops.join());
+  }
+  const winning = stats.total * stats.hitRate;
+  assert.ok(seen.size > winning * 0.5, `saw ${seen.size} of ${winning} winning positions`);
+});
+
+test('a bonus pays several times the wager on average', () => {
+  assert.equal(stats.bonusAverage, BONUS.freeSpins * stats.freeSpinAverage);
+  assert.ok(stats.bonusAverage >= 5 && stats.bonusAverage <= 10, `bonus averages ${stats.bonusAverage}x`);
+});
+
+test('the calculated return matches a long simulated session', () => {
+  const start = 1e9;
+  const wager = 25;
+  const session = simulateSession({ rng: seededRng(99), balance: start, wager, spins: 400000 });
+  const measured = 1 + (session.balance - start) / (session.played * wager);
+  assert.equal(session.bonuses, 400000 / BONUS.spinsToFill);
+  assert.ok(Math.abs(measured - stats.returnRate) < 0.015, `measured ${measured}, calculated ${stats.returnRate}`);
 });
 
 test('between 45% and 60% of spins pay something', () => {
@@ -129,13 +161,13 @@ test('a big win arrives about once in 40 to 120 spins', () => {
   assert.ok(oneIn >= 40 && oneIn <= 120, `big win is one in ${oneIn}`);
 });
 
-test('small prizes make up most wins but three of a kind carries most of the return', () => {
+test('small prizes make up most wins but three of a kind carries most of the paid-spin return', () => {
   const rule = (name) => stats.byRule.find((r) => r.rule === name);
   assert.ok(rule('anyGators').perSpin > rule('three').perSpin);
   assert.ok(rule('three').returnShare > 0.5);
 });
 
-test('a 1,000 token balance usually survives 100 spins at the two lower wagers', () => {
+test('a 1,000 token balance usually survives 100 paid spins at the two lower wagers', () => {
   for (const wager of WAGERS.slice(0, 2)) {
     const { bustRate } = simulateSessions({ seed: 7, sessions: 5000, balance: STARTING_BALANCE, wager, spins: 100 });
     assert.ok(bustRate < 0.25, `bust rate at wager ${wager} is ${bustRate}`);

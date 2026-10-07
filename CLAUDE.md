@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math), 2 (the playable machine), 3 (five win lines), 4 (sound), 5 (logo and first look), and 6 (scenery and screen sizes) are built. Cash Out and a saved balance are not.
+Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math), 2 (the playable machine), 3 (five win lines), 4 (sound), 5 (logo and first look), 6 (scenery and screen sizes), and 7 (free-spins bonus) are built. Cash Out and a saved balance are not.
 
 ## Commands
 
@@ -13,7 +13,7 @@ Plain JavaScript modules on Node 20, with no dependencies and no build or lint s
 - `npm start` serves the game at http://localhost:4747 (`PORT` overrides). The page loads ES modules, so it must be served; opening `index.html` as a file does not work.
 - `npm test` runs every test (Node's built-in runner).
 - `node --test --test-name-pattern="Wild Gator"` runs tests whose name matches.
-- `npm run evidence` plays the running game in headless Chrome and rewrites the screenshots and `results.json` under `features/06-fill-the-screen/evidence/` (the output folder is set at the top of `scripts/capture-evidence.js`; point it at the feature being proven). Needs `npm start` running and Chrome installed (`CHROME` overrides the path).
+- `npm run evidence` plays the running game in headless Chrome and rewrites the screenshots and `results.json` under `features/07-free-spins/evidence/` (the output folder is set at the top of `scripts/capture-evidence.js`; point it at the feature being proven). Needs `npm start` running and Chrome installed (`CHROME` overrides the path).
 - `npm run sound-evidence` renders each sound in headless Chrome and measures it, and checks the game starts sounds at the right moments. Same requirements as `npm run evidence`.
 - `npm run report` prints the measured behavior of the slot math: exact return, hit rate, prize frequencies, and simulated sessions.
 
@@ -25,7 +25,7 @@ Plain JavaScript modules on Node 20, with no dependencies and no build or lint s
 - `src/math/analysis.js` measures the game: `exactStats()` enumerates every reel position, and the session simulator uses a seeded random source so its numbers repeat.
 - `test/math.test.js` asserts the target ranges from the feature 3 intent, so changing `config.js` can fail the tests by design. After retuning, rerun `npm run report` and update the newest feature's evidence. Tests and the evidence script use fixed reel stops with known results; changing the strips or lines invalidates them.
 
-- `src/game/state.js` is the token accounting: balance, wager, spin, refill. It imports the engine and draws nothing, so it is tested in Node.
+- `src/game/state.js` is the token accounting: balance, wager, spin, refill, and the free-spins meter (`BONUS` in `config.js`). Each wager has its own meter so a cheap wager cannot fill a bonus paid at a dear one. `spin()` returns `bonusAwarded`; while `freeSpinsLeft` is above zero only `freeSpin()` is allowed. It imports the engine and draws nothing, so it is tested in Node.
 - `index.html` holds the markup and every symbol's art as inline SVG `<symbol>`s named `gg-<symbol id>`. `src/ui/main.js` wires controls to the game state and runs the spin sequence; `src/ui/reels.js` animates one reel; `src/ui/styles.css` is the look.
 - `src/ui/sound.js` synthesises every sound with Web Audio; there are no audio files. It takes an optional `context` so sounds can be rendered offline and measured. Do not put a `DynamicsCompressorNode` on the output: it cut every sound to about a quarter of its level. Sound cannot be verified by measurement alone; say so and ask Mark to listen.
 - `scripts/lib/browser.js` is a dependency-free headless Chrome driver shared by the evidence scripts.
@@ -38,7 +38,9 @@ The game is drawn at a fixed 390 x 844 and scaled to the window, so layout value
 
 Every idle animation must be listed in the `prefers-reduced-motion` rule at the end of `styles.css`; the evidence script checks nothing is running under reduced motion.
 
-For evidence, `?stops=5,3,14` forces every spin to those reel positions, `&autospin=1` spins on load, and `&speed=4` shortens the reel timings.
+For evidence, `?stops=5,3,14` forces every spin to those reel positions (a free spin ignores them unless they win), `&autospin=1` spins on load, `&speed=4` shortens the reel timings, and `&meter=39` starts with the free-spins meter that far filled.
+
+The return has two parts, both in `exactStats()`: paid spins, and free spins (five average winning spins per full meter). Changing the payout table changes both, so retune against the total.
 
 Each feature has a folder under `features/` with its `intent.md` and, once proven, `evidence.md`. Each feature is built on its own `feature/NN-name` branch. Mark pushes; do not push unless asked.
 
@@ -74,7 +76,8 @@ The game design is expected to be harder than the code: payout table, symbol wei
 
 ## Hard boundaries
 
-- Spins are honest. Every result is an independent draw from the reels; the game must never read the balance or history to choose an outcome or steer a player toward a loss. The house edge comes only from the payout table.
+- Paid spins are honest. Every paid result is an independent draw from the reels; the game must never read the balance to choose an outcome or steer a player toward a loss. The house edge comes only from the payout table.
+- The one stated exception is free spins: each is drawn from the winning reel positions only, so it always pays. That rule is shown to the player in the PAYS view and is counted in the return. Any future mechanic that changes the odds must likewise be stated to the player and included in the reported return, never hidden.
 - Tokens are virtual game credits. No real money, payments, purchases, credit cards, advertising, or external gambling platform.
 - Cash Out transfers nothing. It shows a playful message such as "See Mark to collect your winnings." and keeps the request and token amount visible so it can be settled in person.
 - No accounts, multiplayer, social features, tournaments, complex bonus systems, or backend that the game does not strictly need.

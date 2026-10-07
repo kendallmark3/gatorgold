@@ -62,6 +62,15 @@ export function spin(rng = Math.random) {
   return resultAt(REEL_STRIPS.map((strip) => Math.floor(rng() * strip.length)));
 }
 
+// A free spin: a random spin drawn from the winning reel positions only. Every
+// winning position is equally likely.
+export function spinWinning(rng = Math.random) {
+  for (;;) {
+    const result = spin(rng);
+    if (result.units > 0) return result;
+  }
+}
+
 // Tokens paid for `units` line bets at a wager. The wager must split evenly
 // across the lines, so the result is always a whole number.
 export function payoutFor(units, wager) {

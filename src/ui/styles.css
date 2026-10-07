@@ -51,6 +51,38 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
   box-shadow: 0 0 6vmin 2vmin rgba(255, 240, 170, 0.35);
 }
 .scene .firefly { z-index: auto; }
+.stars { position: absolute; left: 0; top: 0; width: 2px; height: 2px; border-radius: 50%; animation: starlight 5s ease-in-out infinite alternate; }
+@keyframes starlight { from { opacity: 0.55; } to { opacity: 1; } }
+
+/* A string of lights across the top of the screen. */
+.garland { position: absolute; left: 0; top: 0; width: 100%; height: 13vh; min-height: 70px; }
+.bulb { fill: #ffd54a; stroke: #8a5200; stroke-width: 2; animation: bulb 1.2s steps(1) infinite; }
+.bulb.b1 { animation-delay: -0.6s; }
+
+/* The free-spins countdown, hung opposite the moon when there is room. */
+.badge {
+  position: absolute;
+  --badge: min(13vmin, calc(var(--side, 0px) * 0.46));
+  right: calc(var(--side-inset, 0px) + var(--side, 0px) / 2 - var(--badge) / 2);
+  top: 6vh;
+  width: var(--badge);
+  height: var(--badge);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #1d6a48 0%, #06150f 75%);
+  border: 5px solid var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-dark), 0 0 40px 8px rgba(255, 190, 40, 0.45);
+  font-family: 'Lilita One', sans-serif;
+  line-height: 1;
+  color: var(--cream);
+  animation: sway 6s ease-in-out infinite;
+}
+.roomy .badge { display: flex; }
+.badge-top, .badge-label { font-size: calc(var(--badge) * 0.12); letter-spacing: 1px; }
+.badge-count { font-size: calc(var(--badge) * 0.42); color: var(--gold); text-shadow: 0 2px 0 #8a5200; margin: calc(var(--badge) * 0.02) 0; }
 .swamp { position: absolute; left: 0; bottom: 0; width: 100%; height: 36vh; }
 
 /* A gator and a hanging sign either side, shown when there is room. */
@@ -68,8 +100,22 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
 .side.right { right: var(--side-inset, 0px); }
 .side .sign { transform-box: fill-box; transform-origin: 50% 0; animation: sway 5s ease-in-out infinite; }
 .side.right .sign { animation-delay: -2.5s; }
-.side .peek { transform-box: fill-box; transform-origin: 50% 100%; animation: bob 3.6s ease-in-out infinite; }
-.side.right .peek { animation-delay: -1.8s; }
+.side .peek { transform-box: fill-box; transform-origin: 50% 100%; animation: swim 6s ease-in-out infinite; }
+.side.right .peek { animation-delay: -3s; }
+/* The gators drift and dip as if floating. */
+@keyframes swim {
+  0%, 100% { transform: translate(-10px, 6px) rotate(-3deg); }
+  25% { transform: translate(0, -6px) rotate(0deg); }
+  50% { transform: translate(10px, 8px) rotate(3deg); }
+  75% { transform: translate(0, -4px) rotate(0deg); }
+}
+.side .water { animation: wave 5s ease-in-out infinite alternate; }
+@keyframes wave { from { transform: translateX(-12px); } to { transform: translateX(12px); } }
+.side .ripple { fill: none; stroke: #6fd6a8; stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: ripple 3s ease-out infinite; }
+.side .ripple.r2 { animation-delay: -1.5s; }
+@keyframes ripple { from { transform: scale(0.45); opacity: 0.9; } to { transform: scale(1.15); opacity: 0; } }
+.side .blink { opacity: 0; animation: blink 4.5s steps(1) infinite; }
+@keyframes blink { 0%, 93% { opacity: 0; } 94%, 100% { opacity: 1; } }
 @keyframes sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
 
 /* The game is drawn at a fixed 390 x 844 and scaled to fit the window. */
@@ -287,6 +333,52 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
   pointer-events: none;
   background: linear-gradient(180deg, rgba(40, 34, 14, 0.5) 0%, rgba(40, 34, 14, 0.04) 20%, rgba(40, 34, 14, 0) 50%, rgba(40, 34, 14, 0.04) 80%, rgba(40, 34, 14, 0.5) 100%);
 }
+/* The free-spins meter along the bottom of the machine. */
+.meter {
+  position: relative;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--ink);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.9), 0 0 0 2px var(--gold-dark);
+}
+.meter-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ff9d8f 0%, #e0322f 55%, #a01818 100%);
+  transition: width 0.5s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+.meter.hot .meter-fill { animation: hot 0.6s ease-in-out infinite alternate; }
+@keyframes hot { from { filter: brightness(1); } to { filter: brightness(1.5); } }
+.meter-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px #000000, 0 0 4px #000000;
+}
+
+/* During free spins the machine glows and the rays speed up. */
+.game.bonus-mode .cabinet { animation: bonus-glow 0.7s ease-in-out infinite alternate; }
+.game.bonus-mode .rays { animation-duration: 10s; }
+.game.bonus-mode .meter-fill { width: 100% !important; background: linear-gradient(180deg, #fff3a6 0%, #ffc21a 50%, #c77700 100%); }
+.game.bonus-mode .meter-text { color: #3d2200; text-shadow: none; justify-content: center; }
+.game.bonus-mode #meterLabel { display: none; }
+@keyframes bonus-glow {
+  from { box-shadow: 0 0 0 3px var(--gold-dark), 0 14px 30px rgba(0, 0, 0, 0.55), 0 0 14px 2px rgba(255, 213, 74, 0.5); }
+  to { box-shadow: 0 0 0 3px var(--gold-dark), 0 14px 30px rgba(0, 0, 0, 0.55), 0 0 44px 14px rgba(255, 213, 74, 0.95); }
+}
+
 /* Light catching the glass over the reels. */
 .reel-window::after {
   content: '';
@@ -443,6 +535,8 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
   text-shadow: 0 3px 0 #c77700, 0 6px 0 #8a5200, 0 9px 0 #4d2c00, 0 0 40px rgba(255, 190, 40, 0.9);
   animation: slam 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, throb 0.6s ease-in-out 0.5s infinite alternate;
 }
+.bigwin-title.long { font-size: 46px; }
+.bigwin-amount.words { font-size: 30px; }
 .bigwin-amount {
   font-family: 'Lilita One', sans-serif;
   font-size: 60px;
@@ -459,7 +553,8 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
 /* Payout table */
 .pays {
   width: 334px;
-  max-height: 760px;
+  max-height: 800px;
+  overflow-y: auto;
   padding: 16px;
   border: 3px solid var(--gold);
   border-radius: 20px;
@@ -493,7 +588,7 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bulbs::before, .bulbs::after, .cell.win .sym, .lines .glow, .spin.ready, .bigwin-title, .mascot, .mascot.hop, .mascot.peek, .reel.waiting, .rays, .firefly, .logo-shine, .spark, .side .sign, .side .peek,
+  .bulbs::before, .bulbs::after, .cell.win .sym, .lines .glow, .spin.ready, .bigwin-title, .mascot, .mascot.hop, .mascot.peek, .reel.waiting, .rays, .firefly, .logo-shine, .spark, .side .sign, .side .peek, .side .water, .side .ripple, .side .blink, .stars, .bulb, .badge, .meter.hot .meter-fill, .game.bonus-mode .cabinet,
   .topbar, .logo, .mascot-row, .cabinet, .win-panel, .controls { animation: none; }
   .spark { opacity: 0.9; }
 }

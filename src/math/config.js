@@ -42,24 +42,30 @@ export const PAYTABLE = {
   // Three of the same symbol on a line. Wild Gator stands in for any.
   three: {
     wild: 500,
-    queen: 150,
-    chest: 80,
-    cool: 50,
+    queen: 125,
+    chest: 75,
+    cool: 40,
     diamond: 30,
     coin: 25,
     happy: 15,
-    baby: 12,
-    melon: 8,
-    flower: 5,
+    baby: 10,
+    melon: 6,
+    flower: 4,
   },
   // Three gators of any mix on a line.
-  anyGators: 4,
+  anyGators: 3,
   // Gold coins anywhere in view, by how many.
-  coins: { 2: 2, 3: 15 },
+  coins: { 2: 2, 3: 10 },
 };
 
 // A spin that pays this many times the wager, or more, is a big win.
-export const BIG_WIN_AT = 10;
+export const BIG_WIN_AT = 8;
+
+// The free-spins bonus. Each paid spin fills the meter by one; a full meter
+// awards free spins, played at the wager that filled it. Every free spin is
+// drawn from the winning reel positions only, so each one pays something.
+// The meter is kept separately for each wager.
+export const BONUS = { spinsToFill: 40, freeSpins: 5 };
 
 export const WAGERS = [10, 25, 50];
 export const STARTING_BALANCE = 1000;

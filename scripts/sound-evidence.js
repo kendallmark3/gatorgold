@@ -27,6 +27,7 @@ report.sounds = await js(`(async () => {
     win: (s) => s.win(),
     bigWin: (s) => s.bigWin(),
     refill: (s) => s.refill(),
+    bonus: (s) => s.bonus(),
     mutedBigWin: (s) => { s.setMuted(true); s.bigWin(); },
   };
   const out = {};

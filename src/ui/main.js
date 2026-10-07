@@ -1,4 +1,4 @@
-import { REEL_STRIPS, SYMBOLS, LINES, PAYTABLE, BIG_WIN_AT, WILD, COIN } from '../math/config.js';
+import { REEL_STRIPS, SYMBOLS, LINES, PAYTABLE, BONUS, BIG_WIN_AT, WAGERS, WILD, COIN } from '../math/config.js';
 import { resultAt, payoutFor } from '../math/engine.js';
 import { createGame } from '../game/state.js';
 import { createReel, symbolSvg } from './reels.js';
@@ -12,7 +12,8 @@ const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 const params = new URLSearchParams(location.search);
 // For evidence: `?stops=5,3,14` makes every spin land on those reel positions,
-// `&autospin=1` spins once on load, and `&speed=4` runs the reels faster.
+// `&autospin=1` spins once on load, `&speed=4` runs the reels faster, and
+// `&meter=39` starts with the free-spins meter that far filled.
 const forcedStops = params.has('stops') ? params.get('stops').split(',').map(Number) : null;
 const speed = Number(params.get('speed')) || 1;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -30,7 +31,8 @@ const LINE_COLORS = ['#ffd54a', '#ff7ab8', '#5fd6ff', '#ff9a4d', '#c4f25a'];
 const CELL_X = [59, 167, 275];
 const CELL_Y = [55, 149, 243];
 
-const game = createGame();
+const startMeter = Math.min(Number(params.get('meter')) || 0, BONUS.spinsToFill - 1);
+const game = createGame({ bonusProgress: Object.fromEntries(WAGERS.map((w) => [w, startMeter])) });
 
 // The sound choice is kept in the browser. Storage can be unavailable, in
 // which case sound just starts on each time.
@@ -72,6 +74,8 @@ function fit() {
   root.style.setProperty('--side', `${side}px`);
   root.style.setProperty('--side-inset', `${(space - side) / 2}px`);
   root.classList.toggle('wide', side >= 96);
+  // The countdown badge needs a wider margin, and clear sky above the side art.
+  root.classList.toggle('roomy', side >= 200 && innerHeight - side * (620 / 300) - innerHeight * 0.03 > innerHeight * 0.12);
 }
 addEventListener('resize', fit);
 fit();
@@ -115,13 +119,26 @@ function updateControls() {
   spin.classList.toggle('small-label', refill);
   spin.disabled = busy;
   spin.classList.toggle('ready', !busy);
+  showMeter();
+}
+
+// The free-spins meter on the machine, mirrored on the badge in the scenery.
+function showMeter(text) {
+  const left = BONUS.spinsToFill - game.bonusProgress;
+  const meter = $('meter');
+  meter.setAttribute('aria-valuenow', game.bonusProgress);
+  meter.classList.toggle('hot', left <= 5);
+  $('meterFill').style.width = `${(game.bonusProgress / BONUS.spinsToFill) * 100}%`;
+  $('meterCount').textContent = text ?? `${left} ${left === 1 ? 'spin' : 'spins'} to go`;
+  $('badgeCount').textContent = text ? 'NOW!' : left;
+  $('badgeLabel').textContent = text ? '' : 'TO GO';
 }
 
 // When nobody has touched the game for a while, the gator invites a spin.
 let idleTimer = null;
 function idleLines() {
   const top = `${TOP_PRIZE / LINES.length}x`;
-  return ['Tap SPIN to play!', 'The gators feel lucky...', `Three Wild Gators pays ${top}!`, `${LINES.length} lines. One big red button.`];
+  return ['Tap SPIN to play!', 'The gators feel lucky...', `Three Wild Gators pays ${top}!`, `Fill the meter for ${BONUS.freeSpins} free spins!`, `${LINES.length} lines. One big red button.`];
 }
 function restartIdle() {
   clearInterval(idleTimer);
@@ -183,7 +200,9 @@ function describe(result) {
   return { detail, line };
 }
 
-async function celebrateBigWin(payout) {
+// A full-screen banner over the machine with a shower of coins. `amount`
+// counts up from zero when given.
+async function banner({ title, sub = '', amount = null, ms = BIG_WIN_SHOW }) {
   const coins = $('bigwinCoins');
   coins.replaceChildren(
     ...Array.from({ length: 26 }, () => {
@@ -194,8 +213,12 @@ async function celebrateBigWin(payout) {
       return coin;
     }),
   );
+  $('bigwinTitle').textContent = title;
+  $('bigwinTitle').classList.toggle('long', title.length > 9);
+  $('bigwinAmount').textContent = amount === null ? sub : '+0';
+  $('bigwinAmount').classList.toggle('words', amount === null);
   $('bigwin').hidden = false;
-  await Promise.all([countTo($('bigwinAmount'), 0, payout, 1400, '+'), wait(BIG_WIN_SHOW / speed)]);
+  await Promise.all([amount === null ? null : countTo($('bigwinAmount'), 0, amount, 1400, '+'), wait(ms / speed)]);
   $('bigwin').hidden = true;
   coins.replaceChildren();
 }
@@ -211,7 +234,9 @@ async function reveal(outcome) {
 
   const { detail, line } = describe(result);
   const big = result.tier === 'big';
-  const small = result.tier === 'small';
+  // A free spin cost nothing, so even a little is a win outright.
+  const free = outcome.freeSpinsLeft !== undefined;
+  const small = result.tier === 'small' && !free;
   for (const win of result.wins) {
     for (const [reel, row] of win.cells) reels[reel].cells[row].classList.add('win');
     if (win.line !== null) {
@@ -224,16 +249,16 @@ async function reveal(outcome) {
     $('game').classList.add('won');
     $('mascot').classList.add('hop');
   }
-  $('winTitle').textContent = big ? 'BIG WIN!' : small ? 'SMALL WIN' : 'WIN!';
+  $('winTitle').textContent = big ? 'BIG WIN!' : small ? 'SMALL WIN' : free ? 'FREE WIN!' : 'WIN!';
   $('winDetail').textContent = detail;
   $('winAmountWrap').hidden = false;
-  say(line);
+  say(free && result.tier === 'small' ? pick(['Free tokens! Chomp.', 'On the house!', 'That one cost you nothing.']) : line);
   if (big) sound.bigWin();
   else if (small) sound.smallWin();
   else sound.win();
 
   const counting = Promise.all([countTo($('winAmount'), 0, payout, small ? 300 : 700, '+'), showBalance(outcome.balance, small ? 400 : 900)]);
-  if (big) await celebrateBigWin(payout);
+  if (big) await banner({ title: 'BIG WIN!', amount: payout });
   await counting;
 }
 
@@ -247,6 +272,69 @@ function bigWinPending(window) {
     const kind = first === WILD ? second : first;
     return PAYTABLE.three[kind] / LINES.length >= BIG_WIN_AT;
   });
+}
+
+// Rolls the reels to a result, with the sounds and the hang on the last reel.
+// `pace` above 1 rolls faster.
+async function roll(result, pace = 1) {
+  const { window, stops } = result;
+  clearWin();
+  $('game').classList.add('spinning');
+  $('winTitle').textContent = 'GOOD LUCK';
+  $('winDetail').textContent = 'Reels rolling...';
+
+  // The last reel hangs when it could finish a big three of a kind.
+  const suspense = bigWinPending(window);
+  const times = STOP_TIMES.map((t, i) => (reducedMotion ? 300 : (t + (i === 2 && suspense ? SUSPENSE : 0)) / speed / pace));
+  const rolling = reels.map((reel, i) => reel.spinTo(stops[i], times[i]));
+  sound.reelsStart();
+  rolling.forEach((landed, i) => landed.then(() => sound.reelStop(i)));
+  if (suspense) {
+    rolling[1].then(() => {
+      sound.buildStart((times[2] - times[1]) / 1000);
+      reels[2].el.classList.add('waiting');
+      $('mascot').classList.add('peek');
+      say('Ooh... come on, one more!');
+    });
+  }
+  await Promise.all(rolling);
+  sound.buildEnd();
+
+  $('game').classList.remove('spinning');
+  reels[2].el.classList.remove('waiting');
+  $('mascot').classList.remove('peek');
+}
+
+// The bonus: the game plays the free spins itself, then shows what they won.
+async function playFreeSpins() {
+  const count = game.freeSpinsLeft;
+  $('game').classList.add('bonus-mode');
+  showMeter('FREE SPINS!');
+  say('You earned it! Free spins!');
+  sound.bonus();
+  await banner({ title: `${count} FREE SPINS!`, sub: 'Every one wins', ms: 2400 });
+
+  let total = 0;
+  for (let i = 1; i <= count; i++) {
+    showMeter(`FREE SPIN ${i} OF ${count}`);
+    say(`Free spin ${i} of ${count}. On the house!`);
+    sound.press();
+    const outcome = game.freeSpin({ stops: forcedStops ?? undefined });
+    await roll(outcome.result, 1.25);
+    await reveal(outcome);
+    total += outcome.payout;
+    await wait(1100 / speed);
+  }
+
+  clearWin();
+  sound.bigWin();
+  await banner({ title: 'FREE SPINS WON', amount: total });
+  $('game').classList.remove('bonus-mode');
+  $('winTitle').textContent = 'FREE SPINS';
+  $('winDetail').textContent = `${count} spins on the house`;
+  $('winAmount').textContent = `+${format(total)}`;
+  $('winAmountWrap').hidden = false;
+  say('That is how the swamp pays!');
 }
 
 async function spin() {
@@ -267,44 +355,30 @@ async function spin() {
   busy = true;
   sound.press();
   const outcome = game.spin({ stops: forcedStops ?? undefined });
-  const { window, stops } = outcome.result;
-  clearWin();
-  $('game').classList.add('spinning');
-  $('winTitle').textContent = 'GOOD LUCK';
-  $('winDetail').textContent = 'Reels rolling...';
   say('Here we go...');
   showBalance(outcome.balanceAfterWager);
   updateControls();
 
-  // The last reel hangs when it could finish a big three of a kind.
-  const suspense = bigWinPending(window);
-  const times = STOP_TIMES.map((t, i) => (reducedMotion ? 300 : (t + (i === 2 && suspense ? SUSPENSE : 0)) / speed));
-  const rolling = reels.map((reel, i) => reel.spinTo(stops[i], times[i]));
-  sound.reelsStart();
-  rolling.forEach((landed, i) => landed.then(() => sound.reelStop(i)));
-  if (suspense) {
-    rolling[1].then(() => {
-      sound.buildStart((times[2] - times[1]) / 1000);
-      reels[2].el.classList.add('waiting');
-      $('mascot').classList.add('peek');
-      say('Ooh... come on, one more!');
-    });
-  }
-  await Promise.all(rolling);
-  sound.buildEnd();
-
-  $('game').classList.remove('spinning');
-  reels[2].el.classList.remove('waiting');
-  $('mascot').classList.remove('peek');
+  await roll(outcome.result);
   await reveal(outcome);
+
+  if (outcome.bonusAwarded) {
+    await wait(700 / speed);
+    await playFreeSpins();
+  } else {
+    const left = BONUS.spinsToFill - game.bonusProgress;
+    if (outcome.payout === 0 && left <= 3) say(`${left} more ${left === 1 ? 'spin' : 'spins'} to free spins!`);
+  }
 
   if (game.needsRefill) say('Out of tokens! Tap REFILL, it is on the house.');
   busy = false;
   updateControls();
+  restartIdle();
 }
 
 function renderPays() {
   $('paysWager').textContent = game.wager;
+  $('paysBonus').textContent = `Every ${BONUS.spinsToFill} spins at one wager earns ${BONUS.freeSpins} free spins, and every free spin wins.`;
 
   // A small picture of each line.
   $('paysLines').replaceChildren(
@@ -406,6 +480,8 @@ $('lineDots').replaceChildren(
     return dot;
   }),
 );
+$('meter').setAttribute('aria-valuemax', BONUS.spinsToFill);
+$('meterLabel').textContent = `${BONUS.freeSpins} FREE SPINS`;
 $('leftSignBig').textContent = `${LINES.length} LINES`;
 $('rightSignBig').textContent = `${TOP_PRIZE / LINES.length}x`;
 $('balance').textContent = format(game.balance);

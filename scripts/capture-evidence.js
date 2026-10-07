@@ -1,5 +1,5 @@
 // Plays the running game in headless Chrome and captures evidence for the
-// newest feature that changed the screen (feature 6):
+// newest feature that changed the screen (feature 7):
 // screenshots plus results.json. Start the game first with `npm start`, then run
 // `npm run evidence`. Set CHROME to the browser binary if it is not in the default
 // macOS location.
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { launchBrowser, sleep } from './lib/browser.js';
 
-const OUT = fileURLToPath(new URL('../features/06-fill-the-screen/evidence/', import.meta.url));
+const OUT = fileURLToPath(new URL('../features/07-free-spins/evidence/', import.meta.url));
 const { js, open, shot, cdp, errors, close } = await launchBrowser(OUT);
 
 const state = () => js(`({
@@ -129,6 +129,52 @@ const broke = await state();
 await click('spin');
 await sleep(900);
 report.refill = { spinsToEmpty: guard, atEmpty: { balance: broke.balance, spin: broke.spin, bubble: broke.bubble }, afterRefill: await state() };
+
+// The meter: one notch per paid spin, kept separately for each wager.
+await open('?stops=0,2,3&speed=8');
+const meterText = () => js(`document.getElementById('meterCount').textContent`);
+const meterSteps = [await meterText()];
+for (let i = 0; i < 3; i++) { await js(`document.getElementById('spin').click()`); await settle(); meterSteps.push(await meterText()); }
+await js(`document.getElementById('wagerUp').click()`);
+meterSteps.push(`at 50: ${await meterText()}`);
+await js(`document.getElementById('wagerDown').click()`);
+meterSteps.push(`back at 25: ${await meterText()}`);
+report.meter = meterSteps;
+
+// The bonus: the paid spin that fills the meter loses, then the game plays
+// the free spins itself.
+await open('?stops=0,2,3&meter=39&speed=2');
+await shot('18-meter-nearly-full');
+const beforeBonus = await state();
+await js(`document.getElementById('spin').click()`);
+const seen = new Set();
+const lockedDuring = [];
+let shots = 0;
+for (let i = 0; i < 600; i++) {
+  await sleep(50);
+  const now = await js(`({ text: document.getElementById('meterCount').textContent, banner: document.getElementById('bigwin').hidden ? '' : document.getElementById('bigwinTitle').textContent, bonus: document.getElementById('game').classList.contains('bonus-mode'), spinOff: document.getElementById('spin').disabled, wagerOff: document.getElementById('wagerUp').disabled, lit: document.querySelectorAll('.cell.win').length })`);
+  if (now.text.startsWith('FREE SPIN ')) seen.add(now.text);
+  if (now.bonus) lockedDuring.push(now.spinOff && now.wagerOff);
+  if (now.banner.includes('FREE SPINS!') && shots === 0) { await shot('19-free-spins-awarded'); shots = 1; }
+  if (now.bonus && now.lit > 0 && !now.banner && shots === 1) { await shot('20-free-spin-win'); shots = 2; }
+  if (now.banner === 'FREE SPINS WON' && shots === 2) { await sleep(900); await shot('21-free-spins-total'); shots = 3; }
+  if (!now.spinOff && i > 20) break;
+}
+await sleep(300);
+await shot('22-after-free-spins');
+const afterBonus = await state();
+report.bonus = {
+  balanceBefore: beforeBonus.balance,
+  wager: beforeBonus.wager,
+  freeSpinsSeen: [...seen],
+  controlsLockedThroughout: lockedDuring.length > 0 && lockedDuring.every(Boolean),
+  totalShown: afterBonus.win,
+  balanceAfter: afterBonus.balance,
+  balanceAddsUp: afterBonus.balance === beforeBonus.balance - beforeBonus.wager + afterBonus.win,
+  meterAfter: await meterText(),
+  panel: [afterBonus.title, afterBonus.detail],
+  spinEnabledAgain: !afterBonus.spinDisabled,
+};
 
 // First look: layout, motion at rest, the top prize, the idle invitation.
 await open();
