@@ -56,11 +56,22 @@ function quietStops() {
 const opening = quietStops();
 const reels = [...document.querySelectorAll('.reel')].map((el, i) => createReel(el, REEL_STRIPS[i], opening[i]));
 
+// Sizes the machine to the window and works out how much room is left at the
+// sides for scenery.
 function fit() {
-  // On anything wider than a phone, leave a margin so the frame is not cut off.
-  const margin = innerWidth > 480 ? 32 : 0;
-  const scale = Math.min(innerWidth / 390, (innerHeight - margin) / 844, 1.4);
-  document.documentElement.style.setProperty('--scale', scale);
+  const root = document.documentElement;
+  const byWidth = innerWidth / 390;
+  const byHeight = innerHeight / 844;
+  let scale = Math.min(byWidth, byHeight);
+  // With room to spare at the sides, pull in a little so the gold rim shows.
+  if (byHeight < byWidth && innerWidth - 390 * byHeight > 160) scale = (innerHeight - 24) / 844;
+  const space = (innerWidth - 390 * scale) / 2;
+  // The side art is 300 x 620, so its width is also limited by the height.
+  const side = Math.max(0, Math.min(space - 28, innerHeight * 0.44, 340));
+  root.style.setProperty('--scale', scale);
+  root.style.setProperty('--side', `${side}px`);
+  root.style.setProperty('--side-inset', `${(space - side) / 2}px`);
+  root.classList.toggle('wide', side >= 96);
 }
 addEventListener('resize', fit);
 fit();
@@ -395,6 +406,8 @@ $('lineDots').replaceChildren(
     return dot;
   }),
 );
+$('leftSignBig').textContent = `${LINES.length} LINES`;
+$('rightSignBig').textContent = `${TOP_PRIZE / LINES.length}x`;
 $('balance').textContent = format(game.balance);
 updateControls();
 restartIdle();

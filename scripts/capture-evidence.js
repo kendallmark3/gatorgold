@@ -1,5 +1,5 @@
 // Plays the running game in headless Chrome and captures evidence for the
-// newest feature that changed the screen (feature 5):
+// newest feature that changed the screen (feature 6):
 // screenshots plus results.json. Start the game first with `npm start`, then run
 // `npm run evidence`. Set CHROME to the browser binary if it is not in the default
 // macOS location.
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { launchBrowser, sleep } from './lib/browser.js';
 
-const OUT = fileURLToPath(new URL('../features/05-first-look/evidence/', import.meta.url));
+const OUT = fileURLToPath(new URL('../features/06-fill-the-screen/evidence/', import.meta.url));
 const { js, open, shot, cdp, errors, close } = await launchBrowser(OUT);
 
 const state = () => js(`({
@@ -165,10 +165,49 @@ await settle();
 report.reducedMotion = { movingAtRest: movingReduced, afterSpin: await state() };
 await cdp('Emulation.setEmulatedMedia', { features: [] });
 
-// Laptop size.
-await cdp('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+// Screen sizes: the machine must be fully on screen, keep its shape, and not
+// be covered by the scenery.
+const sizes = {
+  '12-phone-small': [375, 667],
+  '13-phone': [390, 844],
+  '14-phone-tall': [412, 915],
+  '15-tablet-upright': [820, 1180],
+  '16-tablet-sideways': [1180, 820],
+  '17-laptop': [1440, 900],
+};
+report.sizes = {};
+for (const [name, [width, height]] of Object.entries(sizes)) {
+  await cdp('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 1000 });
+  await open();
+  await sleep(300);
+  await shot(name);
+  report.sizes[name] = await js(`(() => {
+    const box = (e) => { const r = e.getBoundingClientRect(); return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height }; };
+    const game = box(document.getElementById('game'));
+    const sides = [...document.querySelectorAll('.side')].filter((e) => getComputedStyle(e).display !== 'none').map(box);
+    const spin = box(document.getElementById('spin'));
+    return {
+      screen: [innerWidth, innerHeight],
+      machine: [Math.round(game.width), Math.round(game.height)],
+      fullyOnScreen: game.left >= -0.5 && game.top >= -0.5 && game.right <= innerWidth + 0.5 && game.bottom <= innerHeight + 0.5,
+      shapeKept: Math.abs(game.width / game.height - 390 / 844) < 0.002,
+      fillsOneDimension: Math.abs(game.width - innerWidth) < 1 || innerHeight - game.height <= 25,
+      sceneryShown: sides.length,
+      sceneryClearOfMachine: sides.every((s) => s.right <= game.left || s.left >= game.right),
+      sceneryOnScreen: sides.every((s) => s.left >= 0 && s.right <= innerWidth && s.bottom <= innerHeight && s.top >= 0),
+      spinButton: Math.round(spin.width),
+      logoText: document.querySelector('.logo text').textContent,
+    };
+  })()`);
+}
+
+// Reduced motion with the scenery showing.
+await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
 await open();
-await shot('12-laptop');
+report.reducedMotionLaptop = { movingAtRest: await running() };
+await cdp('Emulation.setEmulatedMedia', { features: [] });
+await open();
+report.laptopMovingAtRest = await running();
 
 report.pageErrors = errors;
 writeFileSync(join(OUT, 'results.json'), JSON.stringify(report, null, 2) + '\n');

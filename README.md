@@ -2,7 +2,7 @@
 
 A playful, alligator-themed slot game built for Stephanie. It should feel like a real animated slot machine, played with virtual tokens only.
 
-**Status:** Progressive Intent v1. Features 1 to 5 are built: the game is playable in a browser, with five win lines, sound, and a logo. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
+**Status:** Progressive Intent v1. Features 1 to 6 are built: the game is playable in a browser on a phone, tablet, or laptop, with five win lines, sound, and a logo. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
 
 ## Play it
 
@@ -68,7 +68,7 @@ No feature is designed ahead of its turn. [intent.md](intent.md) stays the overa
 
 ### Proposed feature order
 
-Each line is one feature with its own intent under [features/](features/). Features 1 to 5 are built; the rest are a proposal.
+Each line is one feature with its own intent under [features/](features/). Features 1 to 6 are built; the rest are a proposal.
 
 | # | Feature | What it proves |
 | --- | --- | --- |
@@ -77,9 +77,10 @@ Each line is one feature with its own intent under [features/](features/). Featu
 | 3 | More ways to win (done) | Five win lines and coins anywhere, so more than half of spins pay something while the house still wins over a long session. See the [evidence](features/03-more-ways/evidence.md) |
 | 4 | Sound (done) | Every moment of a spin has a casino sound, with an on/off control. See the [evidence](features/04-sound/evidence.md) |
 | 5 | First look (done) | A logo, and a screen that moves and invites a spin before it is touched. See the [evidence](features/05-first-look/evidence.md) |
-| 6 | Gators | The characters have more personality and react to what happens |
-| 7 | Cash Out | The "See Mark" redemption request appears and stays visible |
-| 8 | Saved balance | The balance survives closing the game |
+| 6 | Fill the screen (done) | A swamp scene and side art around the machine, an unbroken logo, and correct sizing on phone, tablet, and laptop. See the [evidence](features/06-fill-the-screen/evidence.md) |
+| 7 | Gators | The characters have more personality and react to what happens |
+| 8 | Cash Out | The "See Mark" redemption request appears and stays visible |
+| 9 | Saved balance | The balance survives closing the game |
 
 ## v1 scope
 
@@ -144,7 +145,7 @@ The intent leaves these to the implementer or does not address them. Each has a 
 
 | Question | Why it matters | Proposed default |
 | --- | --- | --- |
-| What device does Stephanie play on? | Drives layout and how the game is delivered to her | Build for a phone first, usable on a laptop |
+| What device does Stephanie play on? | Drives layout and how the game is delivered to her | Still unknown. Since feature 6 the game fits an upright phone, a tablet, and a laptop; a phone held sideways is not supported |
 | What is the technical shape? | "The implementer owns the technical solution" | A single static web page, no backend, no build step |
 | What happens when tokens hit zero? | Otherwise the game dead-ends in a confusing state | A gator offers a free refill |
 | What happens to the balance after Cash Out? | Affects accounting and what "remains visible" means | Balance resets to the starting amount; the request stays on screen with its amount and date |
