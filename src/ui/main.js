@@ -2,6 +2,7 @@ import { REEL_STRIPS, SYMBOLS, LINES, PAYTABLE, BIG_WIN_AT, WILD, COIN } from '.
 import { resultAt, payoutFor } from '../math/engine.js';
 import { createGame } from '../game/state.js';
 import { createReel, symbolSvg } from './reels.js';
+import { createSound } from './sound.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const $ = (id) => document.getElementById(id);
@@ -28,6 +29,18 @@ const CELL_X = [59, 167, 275];
 const CELL_Y = [55, 149, 243];
 
 const game = createGame();
+
+// The sound choice is kept in the browser. Storage can be unavailable, in
+// which case sound just starts on each time.
+const MUTED_KEY = 'gatorgold.muted';
+function storedMuted() {
+  try {
+    return localStorage.getItem(MUTED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+const sound = createSound({ muted: storedMuted() });
 let busy = false;
 let shownBalance = game.balance;
 
@@ -183,6 +196,9 @@ async function reveal(outcome) {
   $('winDetail').textContent = detail;
   $('winAmountWrap').hidden = false;
   say(line);
+  if (big) sound.bigWin();
+  else if (small) sound.smallWin();
+  else sound.win();
 
   const counting = Promise.all([countTo($('winAmount'), 0, payout, small ? 300 : 700, '+'), showBalance(outcome.balance, small ? 400 : 900)]);
   if (big) await celebrateBigWin(payout);
@@ -205,6 +221,7 @@ async function spin() {
   if (busy || $('pays').open) return;
   if (game.needsRefill) {
     game.refill();
+    sound.refill();
     clearWin();
     $('winTitle').textContent = 'GOOD LUCK';
     $('winDetail').textContent = IDLE_DETAIL;
@@ -215,6 +232,7 @@ async function spin() {
   }
 
   busy = true;
+  sound.press();
   const outcome = game.spin({ stops: forcedStops ?? undefined });
   const { window, stops } = outcome.result;
   clearWin();
@@ -229,14 +247,18 @@ async function spin() {
   const suspense = bigWinPending(window);
   const times = STOP_TIMES.map((t, i) => (reducedMotion ? 300 : (t + (i === 2 && suspense ? SUSPENSE : 0)) / speed));
   const rolling = reels.map((reel, i) => reel.spinTo(stops[i], times[i]));
+  sound.reelsStart();
+  rolling.forEach((landed, i) => landed.then(() => sound.reelStop(i)));
   if (suspense) {
     rolling[1].then(() => {
+      sound.buildStart((times[2] - times[1]) / 1000);
       reels[2].el.classList.add('waiting');
       $('mascot').classList.add('peek');
       say('Ooh... come on, one more!');
     });
   }
   await Promise.all(rolling);
+  sound.buildEnd();
 
   $('game').classList.remove('spinning');
   reels[2].el.classList.remove('waiting');
@@ -306,17 +328,38 @@ function renderPays() {
 
 $('spin').addEventListener('click', spin);
 $('wagerDown').addEventListener('click', () => {
+  sound.tick();
   game.stepWager(-1);
   updateControls();
 });
 $('wagerUp').addEventListener('click', () => {
+  sound.tick();
   game.stepWager(1);
   updateControls();
 });
 $('paysOpen').addEventListener('click', () => {
+  sound.tick();
   renderPays();
   $('pays').showModal();
 });
+function showMuted() {
+  const button = $('mute');
+  button.classList.toggle('off', sound.muted);
+  button.setAttribute('aria-pressed', String(!sound.muted));
+  button.setAttribute('aria-label', sound.muted ? 'Sound is off' : 'Sound is on');
+}
+$('mute').addEventListener('click', () => {
+  sound.setMuted(!sound.muted);
+  try {
+    localStorage.setItem(MUTED_KEY, sound.muted ? '1' : '0');
+  } catch {
+    // The choice just will not be remembered.
+  }
+  sound.tick();
+  showMuted();
+});
+showMuted();
+
 addEventListener('keydown', (event) => {
   if (event.code !== 'Space' || event.repeat || event.target.closest('button, dialog')) return;
   event.preventDefault();

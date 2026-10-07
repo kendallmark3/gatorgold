@@ -2,7 +2,7 @@
 
 A playful, alligator-themed slot game built for Stephanie. It should feel like a real animated slot machine, played with virtual tokens only.
 
-**Status:** Progressive Intent v1. Features 1 to 3 are built: the game is playable in a browser, with five win lines. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
+**Status:** Progressive Intent v1. Features 1 to 4 are built: the game is playable in a browser, with five win lines and sound. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
 
 ## Play it
 
@@ -68,16 +68,16 @@ No feature is designed ahead of its turn. [intent.md](intent.md) stays the overa
 
 ### Proposed feature order
 
-Each line is one feature with its own intent under [features/](features/). Features 1 to 3 are built; the rest are a proposal.
+Each line is one feature with its own intent under [features/](features/). Features 1 to 4 are built; the rest are a proposal.
 
 | # | Feature | What it proves |
 | --- | --- | --- |
 | 1 | Slot math (done) | Reels, odds, and a payout table that hit target return and hit rate. See the [evidence](features/01-slot-math/evidence.md) |
 | 2 | The machine (done) | A game that actually works in the browser: spin, watch the reels roll and stop, and win. See the [evidence](features/02-machine/evidence.md) |
 | 3 | More ways to win (done) | Five win lines and coins anywhere, so more than half of spins pay something while the house still wins over a long session. See the [evidence](features/03-more-ways/evidence.md) |
-| 4 | Gators | The characters have more personality and react to what happens |
-| 5 | Cash Out | The "See Mark" redemption request appears and stays visible |
-| 6 | Sound | Spins and wins sound like a casino, with a mute control |
+| 4 | Sound (done) | Every moment of a spin has a casino sound, with an on/off control. See the [evidence](features/04-sound/evidence.md) |
+| 5 | Gators | The characters have more personality and react to what happens |
+| 6 | Cash Out | The "See Mark" redemption request appears and stays visible |
 | 7 | Saved balance | The balance survives closing the game |
 
 ## v1 scope
@@ -152,7 +152,7 @@ The intent leaves these to the implementer or does not address them. Each has a 
 | What return and hit frequency should the game target? | Sets how long a balance lasts and how often Stephanie wins | Set in feature 3: 95% return, 56% of spins pay something, 21% pay the wager back or more |
 | Starting balance and wager steps? | Needed for the three-wager evidence | 1,000 tokens; wagers of 10, 25, and 50 |
 | How are the gators drawn? | Five distinct characters with personality is a large part of the casino look | Hand-built vector art in the page, no external assets |
-| Is sound in v1? | The intent lists it as one option, not a requirement | Yes, with a mute control |
+| Is sound in v1? | The intent lists it as one option, not a requirement | Decided in feature 4: yes, with an on/off control |
 | How is the evidence produced? | A large win cannot be waited for by luck | A hidden test mode that forces a chosen outcome |
 
 ## After v1

@@ -6,6 +6,7 @@
     "start": "node scripts/serve.js",
     "test": "node --test",
     "report": "node scripts/math-report.js",
-    "evidence": "node scripts/capture-evidence.js"
+    "evidence": "node scripts/capture-evidence.js",
+    "sound-evidence": "node scripts/sound-evidence.js"
   }
 }

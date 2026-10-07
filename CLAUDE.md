@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math), 2 (the playable machine), and 3 (five win lines) are built. Cash Out, sound, and a saved balance are not.
+Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math), 2 (the playable machine), 3 (five win lines), and 4 (sound) are built. Cash Out and a saved balance are not.
 
 ## Commands
 
@@ -14,6 +14,7 @@ Plain JavaScript modules on Node 20, with no dependencies and no build or lint s
 - `npm test` runs every test (Node's built-in runner).
 - `node --test --test-name-pattern="Wild Gator"` runs tests whose name matches.
 - `npm run evidence` plays the running game in headless Chrome and rewrites the screenshots and `results.json` under `features/03-more-ways/evidence/`. Needs `npm start` running and Chrome installed (`CHROME` overrides the path).
+- `npm run sound-evidence` renders each sound in headless Chrome and measures it, and checks the game starts sounds at the right moments. Same requirements as `npm run evidence`.
 - `npm run report` prints the measured behavior of the slot math: exact return, hit rate, prize frequencies, and simulated sessions.
 
 ## Architecture
@@ -26,6 +27,8 @@ Plain JavaScript modules on Node 20, with no dependencies and no build or lint s
 
 - `src/game/state.js` is the token accounting: balance, wager, spin, refill. It imports the engine and draws nothing, so it is tested in Node.
 - `index.html` holds the markup and every symbol's art as inline SVG `<symbol>`s named `gg-<symbol id>`. `src/ui/main.js` wires controls to the game state and runs the spin sequence; `src/ui/reels.js` animates one reel; `src/ui/styles.css` is the look.
+- `src/ui/sound.js` synthesises every sound with Web Audio; there are no audio files. It takes an optional `context` so sounds can be rendered offline and measured. Do not put a `DynamicsCompressorNode` on the output: it cut every sound to about a quarter of its level. Sound cannot be verified by measurement alone; say so and ask Mark to listen.
+- `scripts/lib/browser.js` is a dependency-free headless Chrome driver shared by the evidence scripts.
 
 The same engine modules run in Node and in the browser. The game state settles the balance the moment SPIN is pressed; the screen shows the wager leaving at once and the win arriving after the reels stop.
 

@@ -1,0 +1,128 @@
+{
+  "sounds": {
+    "press": {
+      "peak": 0.248,
+      "rms": 0.0062,
+      "seconds": 0.05
+    },
+    "tick": {
+      "peak": 0.057,
+      "rms": 0.0011,
+      "seconds": 0.01
+    },
+    "reelsRolling": {
+      "peak": 0.125,
+      "rms": 0.0116,
+      "seconds": 3.97
+    },
+    "reelStop1": {
+      "peak": 0.258,
+      "rms": 0.0092,
+      "seconds": 0.08
+    },
+    "reelStop2": {
+      "peak": 0.27,
+      "rms": 0.0093,
+      "seconds": 0.08
+    },
+    "reelStop3": {
+      "peak": 0.276,
+      "rms": 0.0097,
+      "seconds": 0.08
+    },
+    "build": {
+      "peak": 0.182,
+      "rms": 0.0555,
+      "seconds": 4
+    },
+    "smallWin": {
+      "peak": 0.149,
+      "rms": 0.0059,
+      "seconds": 0.17
+    },
+    "win": {
+      "peak": 0.232,
+      "rms": 0.0141,
+      "seconds": 0.88
+    },
+    "bigWin": {
+      "peak": 0.53,
+      "rms": 0.0293,
+      "seconds": 2.7
+    },
+    "refill": {
+      "peak": 0.2,
+      "rms": 0.0105,
+      "seconds": 0.72
+    },
+    "mutedBigWin": {
+      "peak": 0,
+      "rms": 0,
+      "seconds": 0
+    }
+  },
+  "inGame": {
+    "loss": {
+      "atPress": 1,
+      "whileRolling": 2,
+      "afterLastStop": 1,
+      "total": 4
+    },
+    "smallWin": {
+      "atPress": 1,
+      "whileRolling": 2,
+      "afterLastStop": 5,
+      "total": 8
+    },
+    "win": {
+      "atPress": 1,
+      "whileRolling": 2,
+      "afterLastStop": 27,
+      "total": 30
+    },
+    "bigWin": {
+      "atPress": 1,
+      "whileRolling": 5,
+      "afterLastStop": 116,
+      "total": 122
+    },
+    "nearMiss": {
+      "atPress": 1,
+      "whileRolling": 5,
+      "afterLastStop": 1,
+      "total": 7
+    }
+  },
+  "control": {
+    "before": {
+      "label": "Sound is on",
+      "pressed": "true"
+    },
+    "off": {
+      "label": "Sound is off",
+      "pressed": "false",
+      "stored": "1"
+    },
+    "mutedSpin": {
+      "atPress": 0,
+      "whileRolling": 0,
+      "afterLastStop": 0,
+      "total": 0
+    },
+    "mutedState": {
+      "balance": "1,035",
+      "win": "+60"
+    },
+    "afterReload": "Sound is off",
+    "backOn": {
+      "label": "Sound is on",
+      "stored": "0"
+    }
+  },
+  "noSoundSupport": {
+    "balance": "1,035",
+    "win": "+60",
+    "title": "WIN!"
+  },
+  "pageErrors": []
+}

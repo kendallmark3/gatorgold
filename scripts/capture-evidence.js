@@ -2,70 +2,14 @@
 // screenshots plus results.json. Start the game first with `npm start`, then run
 // `npm run evidence`. Set CHROME to the browser binary if it is not in the default
 // macOS location.
-import { spawn } from 'node:child_process';
-import { writeFileSync, mkdtempSync, mkdirSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { launchBrowser, sleep } from './lib/browser.js';
 
 const OUT = fileURLToPath(new URL('../features/03-more-ways/evidence/', import.meta.url));
-const BASE = `http://localhost:${process.env.PORT || 4747}/`;
-const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-mkdirSync(OUT, { recursive: true });
-const chrome = spawn(CHROME, [
-  '--headless=new', '--remote-debugging-pipe', '--no-first-run', '--hide-scrollbars',
-  `--user-data-dir=${mkdtempSync(join(tmpdir(), 'gg-'))}`, 'about:blank',
-], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
+const { js, open, shot, errors, close } = await launchBrowser(OUT);
 
-let nextId = 1;
-const pending = new Map();
-const errors = [];
-let buffer = '';
-chrome.stdio[4].on('data', (chunk) => {
-  buffer += chunk.toString();
-  let end;
-  while ((end = buffer.indexOf('\0')) >= 0) {
-    const msg = JSON.parse(buffer.slice(0, end));
-    buffer = buffer.slice(end + 1);
-    if (msg.id && pending.has(msg.id)) {
-      const { resolve, reject } = pending.get(msg.id);
-      pending.delete(msg.id);
-      msg.error ? reject(new Error(JSON.stringify(msg.error))) : resolve(msg.result);
-    } else if (msg.method === 'Runtime.exceptionThrown') {
-      errors.push(msg.params.exceptionDetails.exception?.description ?? msg.params.exceptionDetails.text);
-    } else if (msg.method === 'Log.entryAdded' && msg.params.entry.level === 'error') {
-      errors.push(msg.params.entry.text + ' ' + (msg.params.entry.url ?? ''));
-    }
-  }
-});
-const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
-  const id = nextId++;
-  pending.set(id, { resolve, reject });
-  chrome.stdio[3].write(JSON.stringify({ id, method, params, sessionId }) + '\0');
-});
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
-const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
-const cdp = (m, p) => send(m, p, sessionId);
-await cdp('Page.enable');
-await cdp('Runtime.enable');
-await cdp('Log.enable');
-await cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
-
-const js = async (expression) => {
-  const r = await cdp('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
-  if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text);
-  return r.result.value;
-};
-const open = async (query = '') => {
-  await cdp('Page.navigate', { url: BASE + query });
-  await sleep(900);
-};
-const shot = async (name) => {
-  const { data } = await cdp('Page.captureScreenshot', { format: 'png' });
-  writeFileSync(join(OUT, `${name}.png`), Buffer.from(data, 'base64'));
-};
 const state = () => js(`({
   balance: Number(document.getElementById('balance').textContent.replace(/,/g, '')),
   wager: Number(document.getElementById('wager').textContent),
@@ -189,5 +133,4 @@ report.pageErrors = errors;
 writeFileSync(join(OUT, 'results.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(`Wrote screenshots and results.json to ${OUT}`);
 console.log(JSON.stringify({ randomPlay: report.randomPlay, pageErrors: report.pageErrors }));
-chrome.kill();
-process.exit(0);
+close();
