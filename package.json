@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node scripts/serve.js",
     "test": "node --test",
-    "report": "node scripts/math-report.js"
+    "report": "node scripts/math-report.js",
+    "evidence": "node scripts/capture-evidence.js"
   }
 }

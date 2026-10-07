@@ -4,14 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Feature 1 (slot math) is built. There is no screen or playable game yet; that is feature 2.
+Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math) and 2 (the playable machine) are built. Cash Out, sound, and a saved balance are not.
 
 ## Commands
 
 Plain JavaScript modules on Node 20, with no dependencies and no build or lint step.
 
+- `npm start` serves the game at http://localhost:4747 (`PORT` overrides). The page loads ES modules, so it must be served; opening `index.html` as a file does not work.
 - `npm test` runs every test (Node's built-in runner).
 - `node --test --test-name-pattern="Wild Gator"` runs tests whose name matches.
+- `npm run evidence` plays the running game in headless Chrome and rewrites the screenshots and `results.json` under `features/02-machine/evidence/`. Needs `npm start` running and Chrome installed (`CHROME` overrides the path).
 - `npm run report` prints the measured behavior of the slot math: exact return, hit rate, prize frequencies, and simulated sessions.
 
 ## Architecture
@@ -21,7 +23,14 @@ Plain JavaScript modules on Node 20, with no dependencies and no build or lint s
 - `src/math/analysis.js` measures the game: `exactStats()` enumerates every reel position, and the session simulator uses a seeded random source so its numbers repeat.
 - `test/math.test.js` asserts the target ranges from the feature 1 intent, so changing `config.js` can fail the tests by design. After retuning, regenerate `features/01-slot-math/evidence.md` figures with `npm run report`.
 
-The engine is written as browser-compatible modules so the game screen can import it unchanged.
+- `src/game/state.js` is the token accounting: balance, wager, spin, refill. It imports the engine and draws nothing, so it is tested in Node.
+- `index.html` holds the markup and every symbol's art as inline SVG `<symbol>`s named `gg-<symbol id>`. `src/ui/main.js` wires controls to the game state and runs the spin sequence; `src/ui/reels.js` animates one reel; `src/ui/styles.css` is the look.
+
+The same engine modules run in Node and in the browser. The game state settles the balance the moment SPIN is pressed; the screen shows the wager leaving at once and the win arriving after the reels stop.
+
+The game is drawn at a fixed 390 x 844 and scaled to the window, so layout values are in pixels of that design size. `--cell` in the CSS and `CELL` in `reels.js` must match.
+
+For evidence, `?stops=5,3,14` forces every spin to those reel positions, `&autospin=1` spins on load, and `&speed=4` shortens the reel timings.
 
 Each feature has a folder under `features/` with its `intent.md` and, once proven, `evidence.md`. Each feature is built on its own `feature/NN-name` branch. Mark pushes; do not push unless asked.
 
@@ -43,8 +52,6 @@ Work is feature by feature, one at a time, using progressive intent:
 5. Move on only when the current feature is working and proven.
 
 Do not design or build a feature ahead of its turn. v2 is deliberately undesigned: it comes from Stephanie's reaction to playing v1.
-
-By the end of feature 2 Mark wants a game that actually works: spin, watch the reels, and see a win when three gators land.
 
 ## What matters most
 

@@ -1,0 +1,218 @@
+{
+  "atRest": {
+    "balance": 1000,
+    "wager": 25,
+    "title": "GOOD LUCK",
+    "detail": "Match 3 on the gold line",
+    "win": 0,
+    "bubble": "Tap SPIN to play!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 0,
+    "line": [
+      "melon",
+      "flower",
+      "cool"
+    ],
+    "bigwin": false
+  },
+  "02-loss": {
+    "stops": "0,1,1",
+    "stopTimes": [
+      1110,
+      1624,
+      2127
+    ],
+    "balance": 975,
+    "wager": 25,
+    "title": "NO WIN",
+    "detail": "Spin again!",
+    "win": 0,
+    "bubble": "The swamp is just warming up.",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 0,
+    "line": [
+      "melon",
+      "happy",
+      "chest"
+    ],
+    "bigwin": false
+  },
+  "03-coin": {
+    "stops": "0,0,1",
+    "stopTimes": [
+      1144,
+      1644,
+      2144
+    ],
+    "balance": 1000,
+    "wager": 25,
+    "title": "WIN!",
+    "detail": "Gold coin: wager back",
+    "win": 25,
+    "bubble": "Shiny! You get your wager back.",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 1,
+    "line": [
+      "melon",
+      "coin",
+      "chest"
+    ],
+    "bigwin": false
+  },
+  "04-three-gators": {
+    "stops": "1,1,3",
+    "stopTimes": [
+      1153,
+      1653,
+      2153
+    ],
+    "balance": 1100,
+    "wager": 25,
+    "title": "WIN!",
+    "detail": "Any 3 gators",
+    "win": 125,
+    "bubble": "Gator party! That pays.",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 3,
+    "line": [
+      "baby",
+      "happy",
+      "baby"
+    ],
+    "bigwin": false
+  },
+  "05-three-baby": {
+    "stops": "1,4,3",
+    "stopTimes": [
+      1147,
+      1647,
+      3651
+    ],
+    "balance": 1175,
+    "wager": 25,
+    "title": "WIN!",
+    "detail": "3 x Baby Gator",
+    "win": 200,
+    "bubble": "Three Baby Gators! Chomp!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 3,
+    "line": [
+      "baby",
+      "baby",
+      "baby"
+    ],
+    "bigwin": false
+  },
+  "07-near-miss": {
+    "stops": "16,20,1",
+    "stopTimes": [
+      1149,
+      1648,
+      3651
+    ],
+    "balance": 975,
+    "wager": 25,
+    "title": "NO WIN",
+    "detail": "Spin again!",
+    "win": 0,
+    "bubble": "Shake it off. One more!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 0,
+    "line": [
+      "queen",
+      "queen",
+      "chest"
+    ],
+    "bigwin": false
+  },
+  "06-big-win": {
+    "stops": "5,3,14",
+    "stopTimes": [
+      1126,
+      1643,
+      3653
+    ],
+    "celebrationShowing": true,
+    "balance": 2200,
+    "wager": 50,
+    "title": "BIG WIN!",
+    "detail": "3 x Cool Gator",
+    "win": 1250,
+    "bubble": "Three Cool Gators! Somebody call Mark!",
+    "spin": "SPIN",
+    "spinDisabled": false,
+    "lit": 3,
+    "line": [
+      "cool",
+      "cool",
+      "cool"
+    ],
+    "bigwin": false
+  },
+  "wagerSteps": [
+    [
+      50,
+      false,
+      true
+    ],
+    [
+      50,
+      false,
+      true
+    ],
+    [
+      25,
+      false,
+      false
+    ],
+    [
+      10,
+      true,
+      false
+    ],
+    [
+      10,
+      true,
+      false
+    ]
+  ],
+  "paysRows": 13,
+  "randomPlay": {
+    "spins": 60,
+    "winsSeen": 25,
+    "mismatches": 0,
+    "endBalance": 645
+  },
+  "refill": {
+    "spinsToEmpty": 20,
+    "atEmpty": {
+      "balance": 0,
+      "spin": "REFILL",
+      "bubble": "Out of tokens! Tap REFILL, it is on the house."
+    },
+    "afterRefill": {
+      "balance": 1000,
+      "wager": 50,
+      "title": "GOOD LUCK",
+      "detail": "Match 3 on the gold line",
+      "win": 0,
+      "bubble": "Fresh tokens, on the house!",
+      "spin": "SPIN",
+      "spinDisabled": false,
+      "lit": 0,
+      "line": [
+        "melon",
+        "happy",
+        "chest"
+      ],
+      "bigwin": false
+    }
+  },
+  "pageErrors": []
+}
