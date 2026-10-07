@@ -188,33 +188,11 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
 .cell.win .sym { animation: pop 0.55s ease-in-out infinite; }
 @keyframes pop { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.16) rotate(-4deg); } }
 
-.payline {
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  top: calc(8px + var(--cell) - 2px);
-  height: calc(var(--cell) + 4px);
-  border: 3px solid rgba(255, 213, 74, 0.55);
-  border-radius: 10px;
-  pointer-events: none;
-}
-.payline::before, .payline::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  margin-top: -8px;
-  border: 8px solid transparent;
-}
-.payline::before { left: -14px; border-left-color: var(--gold-dark); }
-.payline::after { right: -14px; border-right-color: var(--gold-dark); }
-.payline.on {
-  border: 4px solid var(--gold);
-  animation: line 0.5s ease-in-out infinite alternate;
-}
-@keyframes line {
-  from { box-shadow: 0 0 0 2px #7a4a00, 0 0 12px 2px rgba(255, 190, 40, 0.6), inset 0 0 8px rgba(255, 190, 40, 0.3); }
-  to { box-shadow: 0 0 0 2px #7a4a00, 0 0 28px 8px rgba(255, 190, 40, 1), inset 0 0 18px rgba(255, 190, 40, 0.7); }
-}
+.lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.lines polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.lines .edge { stroke: #3d2200; stroke-width: 10; opacity: 0.85; }
+.lines .glow { stroke-width: 6; animation: line 0.5s ease-in-out infinite alternate; }
+@keyframes line { from { opacity: 0.55; } to { opacity: 1; } }
 
 /* Win panel */
 .win-panel {
@@ -348,9 +326,11 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
 .pays h2 { margin: 0; text-align: center; font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 30px; color: var(--gold); letter-spacing: 1px; }
 .pays-note { margin: 6px 0; text-align: center; font-size: 13px; font-weight: 800; }
 .pays-list { display: flex; flex-direction: column; gap: 3px; margin: 8px 0; }
-.pays-row { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 10px; border-radius: 10px; background: var(--ink); }
+.pays-row { display: flex; align-items: center; justify-content: space-between; height: 34px; padding: 0 10px; border-radius: 10px; background: var(--ink); }
 .pays-symbols { display: flex; align-items: center; gap: 2px; font-size: 14px; font-weight: 800; }
-.pays-symbols .sym { width: 30px; height: 30px; }
+.pays-symbols .sym { width: 27px; height: 27px; }
+.pays-lines { display: flex; justify-content: space-between; margin: 6px 0; }
+.pays-lines svg { width: 52px; height: 44px; border-radius: 8px; background: var(--ink); }
 .pays-prize { font-family: 'Lilita One', sans-serif; font-size: 20px; color: var(--gold); }
 .pays-prize small { font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; color: var(--cream); margin-left: 6px; }
 .pays-close {
@@ -368,7 +348,7 @@ button:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bulbs::before, .bulbs::after, .cell.win .sym, .payline.on, .spin.ready, .bigwin-title, .mascot.hop, .mascot.peek, .reel.waiting { animation: none; }
+  .bulbs::before, .bulbs::after, .cell.win .sym, .lines .glow, .spin.ready, .bigwin-title, .mascot.hop, .mascot.peek, .reel.waiting { animation: none; }
 }
 
 .reel.blurred .strip { filter: blur(2px); }

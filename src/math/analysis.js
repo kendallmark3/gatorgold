@@ -1,4 +1,4 @@
-import { REEL_STRIPS } from './config.js';
+import { REEL_STRIPS, LINES } from './config.js';
 import { resultAt, spin, payoutFor } from './engine.js';
 
 // Exact figures from every possible combination of reel stops.
@@ -7,18 +7,27 @@ export function exactStats() {
   let total = 0;
   let returned = 0;
   let hits = 0;
+  let wins = 0;
   let big = 0;
+  const byRule = new Map();
   const byMultiplier = new Map();
 
   for (let i = 0; i < a.length; i++) {
     for (let j = 0; j < b.length; j++) {
       for (let k = 0; k < c.length; k++) {
-        const { multiplier, tier } = resultAt([i, j, k]);
+        const result = resultAt([i, j, k]);
         total += 1;
-        returned += multiplier;
-        if (multiplier > 0) hits += 1;
-        if (tier === 'big') big += 1;
-        byMultiplier.set(multiplier, (byMultiplier.get(multiplier) ?? 0) + 1);
+        returned += result.multiplier;
+        if (result.units > 0) hits += 1;
+        if (result.multiplier >= 1) wins += 1;
+        if (result.tier === 'big') big += 1;
+        byMultiplier.set(result.multiplier, (byMultiplier.get(result.multiplier) ?? 0) + 1);
+        for (const win of result.wins) {
+          const entry = byRule.get(win.rule) ?? { count: 0, units: 0 };
+          entry.count += 1;
+          entry.units += win.units;
+          byRule.set(win.rule, entry);
+        }
       }
     }
   }
@@ -26,8 +35,17 @@ export function exactStats() {
   return {
     total,
     returnRate: returned / total,
+    // Spins that pay anything at all.
     hitRate: hits / total,
+    // Spins that pay the wager back or more.
+    winRate: wins / total,
     bigWinRate: big / total,
+    // Each kind of prize: how often it lands per spin and its share of the return.
+    byRule: [...byRule.entries()].map(([rule, { count, units }]) => ({
+      rule,
+      perSpin: count / total,
+      returnShare: units / LINES.length / returned,
+    })),
     byMultiplier: [...byMultiplier.entries()]
       .sort(([x], [y]) => x - y)
       .map(([multiplier, count]) => ({ multiplier, count, share: count / total })),
@@ -50,7 +68,7 @@ export function seededRng(seed) {
 export function simulateSession({ rng, balance, wager, spins }) {
   let played = 0;
   while (played < spins && balance >= wager) {
-    balance += payoutFor(spin(rng).multiplier, wager) - wager;
+    balance += payoutFor(spin(rng).units, wager) - wager;
     played += 1;
   }
   return { balance, played, bust: balance < wager };

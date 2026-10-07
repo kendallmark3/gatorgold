@@ -168,7 +168,7 @@
 <div class="reel"><div class="strip"></div></div>
 <div class="reel"><div class="strip"></div></div>
 <div class="reel"><div class="strip"></div></div>
-<div class="payline" id="payline"></div>
+<svg class="lines" id="lines" viewBox="0 0 334 298" aria-hidden="true"></svg>
 </div>
 <div class="bulbs"></div>
 </div>
@@ -176,7 +176,7 @@
 <div class="win-panel" id="winPanel">
 <div class="win-text">
 <div class="win-title" id="winTitle">GOOD LUCK</div>
-<div class="win-detail" id="winDetail">Match 3 on the gold line</div>
+<div class="win-detail" id="winDetail">5 lines pay on every spin</div>
 </div>
 <div class="win-amount-wrap" id="winAmountWrap" hidden>
 <svg width="30" height="30" aria-hidden="true"><use href="#gg-coin"></use></svg>
@@ -212,7 +212,9 @@
 
 <dialog class="pays" id="pays" aria-labelledby="paysTitle">
 <h2 id="paysTitle">WHAT PAYS</h2>
-<p class="pays-note">On the gold line, at a wager of <span id="paysWager">25</span></p>
+<p class="pays-note">5 lines pay on every spin</p>
+<div class="pays-lines" id="paysLines"></div>
+<p class="pays-note">Tokens paid at a wager of <span id="paysWager">25</span></p>
 <div class="pays-list" id="paysList"></div>
 <p class="pays-note">Wild Gator stands in for any symbol.</p>
 <form method="dialog"><button class="pays-close">GOT IT</button></form>

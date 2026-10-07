@@ -1,14 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WAGERS, STARTING_BALANCE, PAYTABLE } from '../src/math/config.js';
+import { WAGERS, STARTING_BALANCE, PAYTABLE, LINES } from '../src/math/config.js';
 import { seededRng } from '../src/math/analysis.js';
 import { createGame } from '../src/game/state.js';
 
-// Reel stops that give a known result.
-const LOSS = [0, 1, 1];
-const ONE_COIN = [0, 0, 1];
-const MIXED_GATORS = [1, 1, 3];
-const THREE_COOL = [5, 3, 14];
+// Reel stops that give a known result, with what they pay in line bets.
+const LOSS = [0, 2, 3];
+const TWO_COINS = [0, 0, 3]; // 2
+const ONE_GATOR_LINE = [1, 1, 3]; // 4
+const THREE_BABY = [1, 4, 3]; // 12
+const THREE_COOL = [5, 3, 14]; // 50
 
 test('a new game starts with the starting balance and the middle wager', () => {
   const game = createGame();
@@ -24,26 +25,34 @@ test('a losing spin takes the wager and pays nothing', () => {
   assert.equal(game.balance, STARTING_BALANCE - 25);
 });
 
-test('a winning spin takes the wager and adds the win, at every wager', () => {
+test('a small win pays less than the wager, at every wager', () => {
   for (const wager of WAGERS) {
     const game = createGame({ wager });
-    const outcome = game.spin({ stops: MIXED_GATORS });
-    assert.equal(outcome.payout, PAYTABLE.anyGators * wager);
-    assert.equal(game.balance, STARTING_BALANCE - wager + PAYTABLE.anyGators * wager);
+    const outcome = game.spin({ stops: ONE_GATOR_LINE });
+    assert.equal(outcome.payout, (PAYTABLE.anyGators * wager) / LINES.length);
+    assert.ok(outcome.payout > 0 && outcome.payout < wager);
+    assert.equal(game.balance, STARTING_BALANCE - wager + outcome.payout);
   }
+  const coins = createGame();
+  assert.equal(coins.spin({ stops: TWO_COINS }).payout, 10);
+  assert.equal(coins.balance, STARTING_BALANCE - 25 + 10);
 });
 
-test('one coin returns the wager', () => {
-  const game = createGame();
-  game.spin({ stops: ONE_COIN });
-  assert.equal(game.balance, STARTING_BALANCE);
+test('a win is credited in full, at every wager', () => {
+  for (const wager of WAGERS) {
+    const game = createGame({ wager });
+    const outcome = game.spin({ stops: THREE_BABY });
+    assert.equal(outcome.payout, (PAYTABLE.three.baby * wager) / LINES.length);
+    assert.equal(game.balance, STARTING_BALANCE - wager + outcome.payout);
+  }
 });
 
 test('a big win is credited in full', () => {
   const game = createGame({ wager: 50 });
   const outcome = game.spin({ stops: THREE_COOL });
   assert.equal(outcome.result.tier, 'big');
-  assert.equal(game.balance, STARTING_BALANCE - 50 + PAYTABLE.three.cool * 50);
+  assert.equal(outcome.payout, 500);
+  assert.equal(game.balance, STARTING_BALANCE - 50 + 500);
 });
 
 test('the balance always equals start minus wagers plus wins, and never goes negative', () => {

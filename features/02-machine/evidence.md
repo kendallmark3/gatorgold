@@ -1,5 +1,7 @@
 # Feature 2: The machine, evidence
 
+> **Partly superseded.** [Feature 3](../03-more-ways/evidence.md) added four more win lines and changed the payouts, so the amounts and screenshots below show the game as it was after feature 2.
+
 Captured on 2026-10-06 against [intent.md](intent.md) by playing the running game in headless Chrome at phone size (390 x 844). Reproduce with `npm start` in one terminal and `npm run evidence` in another; raw values are in [evidence/results.json](evidence/results.json).
 
 ## Result against each criterion

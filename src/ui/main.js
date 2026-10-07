@@ -1,8 +1,9 @@
-import { REEL_STRIPS, SYMBOLS, PAYTABLE, WILD, COIN } from '../math/config.js';
-import { resultAt } from '../math/engine.js';
+import { REEL_STRIPS, SYMBOLS, LINES, PAYTABLE, BIG_WIN_AT, WILD, COIN } from '../math/config.js';
+import { resultAt, payoutFor } from '../math/engine.js';
 import { createGame } from '../game/state.js';
 import { createReel, symbolSvg } from './reels.js';
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
 const $ = (id) => document.getElementById(id);
 const format = (n) => n.toLocaleString('en-US');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -18,6 +19,13 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STOP_TIMES = [1100, 1600, 2100];
 const SUSPENSE = 1500;
 const BIG_WIN_SHOW = 2800;
+const IDLE_DETAIL = `${LINES.length} lines pay on every spin`;
+
+// One colour per win line, in the order of LINES.
+const LINE_COLORS = ['#ffd54a', '#ff7ab8', '#5fd6ff', '#ff9a4d', '#c4f25a'];
+// Cell centres inside the reel window, matching the layout in styles.css.
+const CELL_X = [59, 167, 275];
+const CELL_Y = [55, 149, 243];
 
 const game = createGame();
 let busy = false;
@@ -27,7 +35,7 @@ let shownBalance = game.balance;
 function quietStops() {
   for (;;) {
     const stops = REEL_STRIPS.map((strip) => Math.floor(Math.random() * strip.length));
-    if (resultAt(stops).multiplier === 0) return stops;
+    if (resultAt(stops).units === 0) return stops;
   }
 }
 const opening = quietStops();
@@ -80,10 +88,18 @@ function updateControls() {
   spin.classList.toggle('ready', !busy);
 }
 
+function polyline(points, className, color) {
+  const line = document.createElementNS(SVG_NS, 'polyline');
+  line.setAttribute('points', points.map(([reel, row]) => `${CELL_X[reel]},${CELL_Y[row]}`).join(' '));
+  line.setAttribute('class', className);
+  if (color) line.setAttribute('stroke', color);
+  return line;
+}
+
 function clearWin() {
   $('game').classList.remove('won');
   $('reelWindow').classList.remove('won');
-  $('payline').classList.remove('on');
+  $('lines').replaceChildren();
   $('winPanel').classList.remove('on');
   $('winAmountWrap').hidden = true;
   $('mascot').classList.remove('hop', 'peek');
@@ -93,14 +109,33 @@ function clearWin() {
   }
 }
 
+// The words for a result: the panel detail and what the gator says.
 function describe(result) {
-  if (result.rule === 'three') {
-    const name = SYMBOLS[result.symbol].name;
-    return { detail: `3 x ${name}`, line: result.tier === 'big' ? `Three ${name}s! Somebody call Mark!` : `Three ${name}s! Chomp!` };
+  const lineWins = result.wins.filter((w) => w.line !== null);
+  const coins = result.wins.find((w) => w.rule === 'coins');
+  const best = result.wins.reduce((a, b) => (b.units > a.units ? b : a));
+
+  let detail;
+  if (result.wins.length === 1) {
+    if (best.rule === 'three') detail = `3 x ${SYMBOLS[best.symbol].name}`;
+    else if (best.rule === 'anyGators') detail = 'Any 3 gators';
+    else detail = `${best.cells.length} gold coins`;
+  } else {
+    detail = [lineWins.length > 0 && `${lineWins.length} ${lineWins.length === 1 ? 'line' : 'lines'}`, coins && 'coins'].filter(Boolean).join(' + ');
   }
-  if (result.rule === 'anyGators') return { detail: 'Any 3 gators', line: 'Gator party! That pays.' };
-  if (result.multiplier === PAYTABLE.coins[1]) return { detail: 'Gold coin: wager back', line: 'Shiny! You get your wager back.' };
-  return { detail: '2 gold coins', line: 'Double gold! Nice one.' };
+
+  let line;
+  if (result.tier === 'small') {
+    line = pick(['A little something back.', 'Small bite. Keep going!', 'A snack for the gators.', 'Something is better than nothing!']);
+  } else if (best.rule === 'three') {
+    const name = SYMBOLS[best.symbol].name;
+    line = result.tier === 'big' ? `Three ${name}s! Somebody call Mark!` : `Three ${name}s! Chomp!`;
+  } else if (best.rule === 'coins') {
+    line = 'Gold everywhere! Nice one.';
+  } else {
+    line = 'Gator party! That pays.';
+  }
+  return { detail, line };
 }
 
 async function celebrateBigWin(payout) {
@@ -131,23 +166,39 @@ async function reveal(outcome) {
 
   const { detail, line } = describe(result);
   const big = result.tier === 'big';
-  reels.forEach((reel, i) => {
-    const onLine = reel.cells[1];
-    if (result.rule !== 'coins' || result.line[i] === COIN) onLine.classList.add('win');
-  });
-  $('game').classList.add('won');
+  const small = result.tier === 'small';
+  for (const win of result.wins) {
+    for (const [reel, row] of win.cells) reels[reel].cells[row].classList.add('win');
+    if (win.line !== null) {
+      $('lines').append(polyline(win.cells, 'edge'), polyline(win.cells, 'glow', LINE_COLORS[win.line]));
+    }
+  }
   $('reelWindow').classList.add('won');
-  $('payline').classList.add('on');
   $('winPanel').classList.add('on');
-  $('mascot').classList.add('hop');
-  $('winTitle').textContent = big ? 'BIG WIN!' : 'WIN!';
+  if (!small) {
+    $('game').classList.add('won');
+    $('mascot').classList.add('hop');
+  }
+  $('winTitle').textContent = big ? 'BIG WIN!' : small ? 'SMALL WIN' : 'WIN!';
   $('winDetail').textContent = detail;
   $('winAmountWrap').hidden = false;
   say(line);
 
-  const counting = Promise.all([countTo($('winAmount'), 0, payout, 700, '+'), showBalance(outcome.balance, 900)]);
+  const counting = Promise.all([countTo($('winAmount'), 0, payout, small ? 300 : 700, '+'), showBalance(outcome.balance, small ? 400 : 900)]);
   if (big) await celebrateBigWin(payout);
   await counting;
+}
+
+// True when the first two reels leave a big three of a kind one symbol away
+// on some line.
+function bigWinPending(window) {
+  return LINES.some(({ rows }) => {
+    const first = window[0][rows[0]];
+    const second = window[1][rows[1]];
+    if (first !== second && first !== WILD && second !== WILD) return false;
+    const kind = first === WILD ? second : first;
+    return PAYTABLE.three[kind] / LINES.length >= BIG_WIN_AT;
+  });
 }
 
 async function spin() {
@@ -156,7 +207,7 @@ async function spin() {
     game.refill();
     clearWin();
     $('winTitle').textContent = 'GOOD LUCK';
-    $('winDetail').textContent = 'Match 3 on the gold line';
+    $('winDetail').textContent = IDLE_DETAIL;
     say('Fresh tokens, on the house!');
     await showBalance(game.balance, 600);
     updateControls();
@@ -165,7 +216,7 @@ async function spin() {
 
   busy = true;
   const outcome = game.spin({ stops: forcedStops ?? undefined });
-  const { line, stops } = outcome.result;
+  const { window, stops } = outcome.result;
   clearWin();
   $('game').classList.add('spinning');
   $('winTitle').textContent = 'GOOD LUCK';
@@ -174,8 +225,8 @@ async function spin() {
   showBalance(outcome.balanceAfterWager);
   updateControls();
 
-  // The last reel hangs when the first two could finish a three of a kind.
-  const suspense = line[0] === line[1] || line[0] === WILD || line[1] === WILD;
+  // The last reel hangs when it could finish a big three of a kind.
+  const suspense = bigWinPending(window);
   const times = STOP_TIMES.map((t, i) => (reducedMotion ? 300 : (t + (i === 2 && suspense ? SUSPENSE : 0)) / speed));
   const rolling = reels.map((reel, i) => reel.spinTo(stops[i], times[i]));
   if (suspense) {
@@ -199,7 +250,39 @@ async function spin() {
 
 function renderPays() {
   $('paysWager').textContent = game.wager;
-  const row = (symbols, text, multiplier) => {
+
+  // A small picture of each line.
+  $('paysLines').replaceChildren(
+    ...LINES.map(({ rows }, index) => {
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 52 44');
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', `${LINES[index].name} line`);
+      const xs = [11, 26, 41];
+      const ys = [9, 22, 35];
+      for (const x of xs) {
+        for (const y of ys) {
+          const dot = document.createElementNS(SVG_NS, 'circle');
+          dot.setAttribute('cx', x);
+          dot.setAttribute('cy', y);
+          dot.setAttribute('r', 3);
+          dot.setAttribute('fill', '#3a5a48');
+          svg.append(dot);
+        }
+      }
+      const line = document.createElementNS(SVG_NS, 'polyline');
+      line.setAttribute('points', rows.map((row, reel) => `${xs[reel]},${ys[row]}`).join(' '));
+      line.setAttribute('fill', 'none');
+      line.setAttribute('stroke', LINE_COLORS[index]);
+      line.setAttribute('stroke-width', 4);
+      line.setAttribute('stroke-linecap', 'round');
+      line.setAttribute('stroke-linejoin', 'round');
+      svg.append(line);
+      return svg;
+    }),
+  );
+
+  const row = (symbols, text, units) => {
     const div = document.createElement('div');
     div.className = 'pays-row';
     const left = document.createElement('div');
@@ -207,17 +290,17 @@ function renderPays() {
     left.append(...symbols.map((s) => symbolSvg(s)), ` ${text}`);
     const right = document.createElement('div');
     right.className = 'pays-prize';
-    const tokens = document.createElement('small');
-    tokens.textContent = `${multiplier}x`;
-    right.append(format(multiplier * game.wager), tokens);
+    const times = document.createElement('small');
+    times.textContent = `${units / LINES.length}x`;
+    right.append(format(payoutFor(units, game.wager)), times);
     div.append(left, right);
     return div;
   };
   $('paysList').replaceChildren(
-    ...Object.entries(PAYTABLE.three).map(([s, m]) => row([s, s, s], '', m)),
+    ...Object.entries(PAYTABLE.three).map(([s, units]) => row([s, s, s], '', units)),
     row(['happy', 'queen', 'baby'], 'any gators', PAYTABLE.anyGators),
-    row([COIN, COIN], '2 coins', PAYTABLE.coins[2]),
-    row([COIN], '1 coin', PAYTABLE.coins[1]),
+    row([COIN, COIN, COIN], 'anywhere', PAYTABLE.coins[3]),
+    row([COIN, COIN], 'anywhere', PAYTABLE.coins[2]),
   );
 }
 

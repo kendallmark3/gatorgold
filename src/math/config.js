@@ -26,29 +26,40 @@ export const REEL_STRIPS = [
   ['coin', 'chest', 'diamond', 'baby', 'flower', 'melon', 'coin', 'baby', 'queen', 'flower', 'happy', 'melon', 'flower', 'queen', 'cool', 'diamond', 'flower', 'happy', 'baby', 'coin', 'diamond', 'flower', 'melon', 'happy', 'cool', 'wild', 'happy', 'baby', 'melon', 'flower', 'baby', 'chest', 'cool', 'melon'],
 ];
 
-// Payouts are multiples of the wager.
+// The five win lines, as the row each reel contributes (0 is the top row).
+// Every spin plays all five; the wager is split evenly across them.
+export const LINES = [
+  { name: 'Middle', rows: [1, 1, 1] },
+  { name: 'Top', rows: [0, 0, 0] },
+  { name: 'Bottom', rows: [2, 2, 2] },
+  { name: 'Downhill', rows: [0, 1, 2] },
+  { name: 'Uphill', rows: [2, 1, 0] },
+];
+
+// Payouts are in line bets. A line bet is the wager divided by the number of
+// lines, so 5 line bets returns the wager.
 export const PAYTABLE = {
-  // Three of the same symbol on the win line. Wild Gator stands in for any.
+  // Three of the same symbol on a line. Wild Gator stands in for any.
   three: {
-    wild: 100,
-    queen: 50,
-    chest: 40,
-    cool: 25,
-    diamond: 20,
-    coin: 15,
-    happy: 12,
-    baby: 8,
-    melon: 6,
-    flower: 4,
+    wild: 500,
+    queen: 150,
+    chest: 80,
+    cool: 50,
+    diamond: 30,
+    coin: 25,
+    happy: 15,
+    baby: 12,
+    melon: 8,
+    flower: 5,
   },
-  // Three gators of any mix on the win line.
-  anyGators: 5,
-  // Gold coins anywhere on the win line, by how many.
-  coins: { 1: 1, 2: 3 },
+  // Three gators of any mix on a line.
+  anyGators: 4,
+  // Gold coins anywhere in view, by how many.
+  coins: { 2: 2, 3: 15 },
 };
 
-// A win of this many times the wager, or more, is a big win.
-export const BIG_WIN_AT = 15;
+// A spin that pays this many times the wager, or more, is a big win.
+export const BIG_WIN_AT = 10;
 
 export const WAGERS = [10, 25, 50];
 export const STARTING_BALANCE = 1000;

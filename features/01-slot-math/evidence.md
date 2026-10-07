@@ -1,5 +1,7 @@
 # Feature 1: Slot math, evidence
 
+> **Superseded.** [Feature 3](../03-more-ways/evidence.md) replaced the single win line and this payout table with five lines. The figures below describe the game as it was after feature 1.
+
 Measured on 2026-10-06 against [intent.md](intent.md). Regenerate the figures with `npm run report`; rerun the checks with `npm test`.
 
 ## Result against each criterion

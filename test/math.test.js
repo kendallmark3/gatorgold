@@ -1,10 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SYMBOLS, REEL_STRIPS, PAYTABLE, BIG_WIN_AT, WAGERS, STARTING_BALANCE } from '../src/math/config.js';
-import { evaluate, resultAt, spin, payoutFor } from '../src/math/engine.js';
+import { SYMBOLS, REEL_STRIPS, LINES, PAYTABLE, BIG_WIN_AT, WAGERS, STARTING_BALANCE } from '../src/math/config.js';
+import { evaluate, evaluateLine, resultAt, spin, payoutFor } from '../src/math/engine.js';
 import { exactStats, seededRng, simulateSessions } from '../src/math/analysis.js';
 
 const stats = exactStats();
+
+// Builds a three-reel view from its rows, top to bottom.
+const view = (top, middle, bottom) => [0, 1, 2].map((reel) => [top[reel], middle[reel], bottom[reel]]);
+const QUIET_TOP = ['melon', 'flower', 'diamond'];
+const QUIET_BOTTOM = ['flower', 'diamond', 'melon'];
 
 test('every reel position gives a valid result', () => {
   const [a, b, c] = REEL_STRIPS;
@@ -17,8 +22,9 @@ test('every reel position gives a valid result', () => {
           assert.equal(column.length, 3);
           for (const s of column) assert.ok(SYMBOLS[s], `unknown symbol ${s}`);
         }
-        assert.deepEqual(r.line, r.window.map((column) => column[1]));
-        assert.ok(Number.isInteger(r.multiplier) && r.multiplier >= 0);
+        assert.ok(Number.isInteger(r.units) && r.units >= 0);
+        assert.equal(r.units, r.wins.reduce((sum, win) => sum + win.units, 0));
+        for (const wager of WAGERS) assert.ok(Number.isInteger(payoutFor(r.units, wager)));
       }
     }
   }
@@ -34,74 +40,124 @@ test('a reel never shows the same symbol twice', () => {
   }
 });
 
-test('three of the same symbol pays, and rarer symbols pay more', () => {
-  for (const [symbol, multiplier] of Object.entries(PAYTABLE.three)) {
-    assert.equal(evaluate([symbol, symbol, symbol]).multiplier, multiplier);
+test('three of the same symbol pays on a line, and rarer symbols pay more', () => {
+  for (const [symbol, units] of Object.entries(PAYTABLE.three)) {
+    assert.deepEqual(evaluateLine([symbol, symbol, symbol]), { rule: 'three', symbol, units });
   }
   const count = (s) => REEL_STRIPS.flat().filter((x) => x === s).length;
-  const byRarity = Object.keys(PAYTABLE.three).sort((x, y) => count(x) - count(y));
-  for (let i = 1; i < byRarity.length; i++) {
-    const rarer = byRarity[i - 1];
-    const commoner = byRarity[i];
-    if (count(rarer) < count(commoner)) {
-      assert.ok(PAYTABLE.three[rarer] > PAYTABLE.three[commoner], `${rarer} should pay more than ${commoner}`);
+  const symbols = Object.keys(PAYTABLE.three);
+  for (const rarer of symbols) {
+    for (const commoner of symbols) {
+      if (count(rarer) < count(commoner)) {
+        assert.ok(PAYTABLE.three[rarer] > PAYTABLE.three[commoner], `${rarer} should pay more than ${commoner}`);
+      }
     }
   }
 });
 
 test('Wild Gator stands in for any symbol', () => {
-  assert.equal(evaluate(['wild', 'cool', 'cool']).multiplier, PAYTABLE.three.cool);
-  assert.equal(evaluate(['diamond', 'wild', 'wild']).multiplier, PAYTABLE.three.diamond);
-  assert.equal(evaluate(['coin', 'wild', 'coin']).multiplier, PAYTABLE.three.coin);
-  assert.equal(evaluate(['wild', 'wild', 'wild']).multiplier, PAYTABLE.three.wild);
+  assert.equal(evaluateLine(['wild', 'cool', 'cool']).units, PAYTABLE.three.cool);
+  assert.equal(evaluateLine(['diamond', 'wild', 'wild']).units, PAYTABLE.three.diamond);
+  assert.equal(evaluateLine(['coin', 'wild', 'coin']).units, PAYTABLE.three.coin);
+  assert.equal(evaluateLine(['wild', 'wild', 'wild']).units, PAYTABLE.three.wild);
 });
 
-test('three gators of any mix pay a small prize', () => {
-  assert.deepEqual(evaluate(['queen', 'baby', 'happy']), { multiplier: PAYTABLE.anyGators, rule: 'anyGators', symbol: null, tier: 'win' });
-  assert.equal(evaluate(['wild', 'queen', 'cool']).multiplier, PAYTABLE.anyGators);
-  assert.equal(evaluate(['queen', 'baby', 'melon']).multiplier, 0);
+test('three gators of any mix pay a small prize on a line', () => {
+  assert.deepEqual(evaluateLine(['queen', 'baby', 'happy']), { rule: 'anyGators', symbol: null, units: PAYTABLE.anyGators });
+  assert.equal(evaluateLine(['wild', 'queen', 'cool']).units, PAYTABLE.anyGators);
+  assert.equal(evaluateLine(['queen', 'baby', 'melon']), null);
+  assert.ok(PAYTABLE.anyGators < LINES.length, 'any three gators should pay less than the wager');
 });
 
-test('gold coins on the line pay by how many', () => {
-  assert.equal(evaluate(['coin', 'melon', 'flower']).multiplier, PAYTABLE.coins[1]);
-  assert.equal(evaluate(['coin', 'melon', 'coin']).multiplier, PAYTABLE.coins[2]);
+test('all five lines pay: three rows and both diagonals', () => {
+  assert.equal(LINES.length, 5);
+  const three = PAYTABLE.three.baby;
+  const cases = [
+    [view(QUIET_TOP, ['baby', 'baby', 'baby'], QUIET_BOTTOM), 0],
+    [view(['baby', 'baby', 'baby'], ['melon', 'flower', 'diamond'], QUIET_BOTTOM), 1],
+    [view(QUIET_TOP, ['flower', 'diamond', 'melon'], ['baby', 'baby', 'baby']), 2],
+    [view(['baby', 'flower', 'diamond'], ['melon', 'baby', 'flower'], ['flower', 'diamond', 'baby']), 3],
+    [view(['melon', 'flower', 'baby'], ['flower', 'baby', 'melon'], ['baby', 'diamond', 'flower']), 4],
+  ];
+  for (const [window, line] of cases) {
+    const r = evaluate(window);
+    assert.deepEqual(r.wins.map((w) => [w.line, w.units]), [[line, three]], `line ${LINES[line].name}`);
+    assert.deepEqual(r.wins[0].cells, LINES[line].rows.map((row, reel) => [reel, row]));
+  }
 });
 
-test('a line with nothing on it loses', () => {
-  assert.deepEqual(evaluate(['melon', 'flower', 'diamond']), { multiplier: 0, rule: null, symbol: null, tier: 'none' });
+test('wins on several lines add up', () => {
+  const r = evaluate(view(['baby', 'baby', 'baby'], ['melon', 'flower', 'diamond'], ['queen', 'happy', 'cool']));
+  assert.deepEqual(r.wins.map((w) => w.line), [1, 2]);
+  assert.equal(r.units, PAYTABLE.three.baby + PAYTABLE.anyGators);
 });
 
-test('wins are tiered as normal or big', () => {
-  assert.equal(evaluate(['flower', 'flower', 'flower']).tier, 'win');
-  assert.equal(evaluate(['queen', 'queen', 'queen']).tier, 'big');
-  assert.equal(evaluate(['diamond', 'diamond', 'diamond']).tier, PAYTABLE.three.diamond >= BIG_WIN_AT ? 'big' : 'win');
+test('gold coins pay anywhere in view, by how many', () => {
+  const one = evaluate(view(['coin', 'flower', 'diamond'], ['melon', 'diamond', 'flower'], QUIET_BOTTOM));
+  assert.equal(one.units, 0);
+  const two = evaluate(view(['coin', 'flower', 'diamond'], ['melon', 'diamond', 'flower'], ['flower', 'melon', 'coin']));
+  assert.deepEqual(two.wins.map((w) => [w.rule, w.units, w.cells]), [['coins', PAYTABLE.coins[2], [[0, 0], [2, 2]]]]);
+  const three = evaluate(view(['coin', 'flower', 'diamond'], ['melon', 'coin', 'flower'], ['flower', 'melon', 'coin']));
+  assert.equal(three.units, PAYTABLE.coins[3] + PAYTABLE.three.coin, 'three coins on a diagonal also win that line');
 });
 
-test('long-run return is between 95% and 98%', () => {
-  assert.ok(stats.returnRate >= 0.95 && stats.returnRate <= 0.98, `return is ${stats.returnRate}`);
+test('a view with nothing in it loses', () => {
+  assert.deepEqual(evaluate(view(QUIET_TOP, ['flower', 'diamond', 'melon'], ['chest', 'melon', 'chest'])), { wins: [], units: 0, multiplier: 0, tier: 'none' });
 });
 
-test('between 30% and 38% of spins pay something', () => {
-  assert.ok(stats.hitRate >= 0.3 && stats.hitRate <= 0.38, `hit rate is ${stats.hitRate}`);
+test('wins are tiered as small, normal, or big', () => {
+  assert.equal(resultAt([1, 1, 3]).tier, 'small', 'less than the wager back');
+  assert.equal(resultAt([1, 4, 3]).tier, 'win');
+  assert.equal(resultAt([6, 4, 7]).tier, 'big');
+  assert.ok(resultAt([6, 4, 7]).multiplier >= BIG_WIN_AT);
 });
 
-test('a big win arrives about once in 80 to 200 spins', () => {
+test('long-run return is between 93% and 97%', () => {
+  assert.ok(stats.returnRate >= 0.93 && stats.returnRate <= 0.97, `return is ${stats.returnRate}`);
+});
+
+test('between 45% and 60% of spins pay something', () => {
+  assert.ok(stats.hitRate >= 0.45 && stats.hitRate <= 0.6, `hit rate is ${stats.hitRate}`);
+});
+
+test('between 15% and 25% of spins pay the wager back or more', () => {
+  assert.ok(stats.winRate >= 0.15 && stats.winRate <= 0.25, `win rate is ${stats.winRate}`);
+});
+
+test('a big win arrives about once in 40 to 120 spins', () => {
   const oneIn = 1 / stats.bigWinRate;
-  assert.ok(oneIn >= 80 && oneIn <= 200, `big win is one in ${oneIn}`);
+  assert.ok(oneIn >= 40 && oneIn <= 120, `big win is one in ${oneIn}`);
 });
 
-test('a 1,000 token balance usually survives 100 spins at any wager', () => {
-  for (const wager of WAGERS) {
+test('small prizes make up most wins but three of a kind carries most of the return', () => {
+  const rule = (name) => stats.byRule.find((r) => r.rule === name);
+  assert.ok(rule('anyGators').perSpin > rule('three').perSpin);
+  assert.ok(rule('three').returnShare > 0.5);
+});
+
+test('a 1,000 token balance usually survives 100 spins at the two lower wagers', () => {
+  for (const wager of WAGERS.slice(0, 2)) {
     const { bustRate } = simulateSessions({ seed: 7, sessions: 5000, balance: STARTING_BALANCE, wager, spins: 100 });
-    assert.ok(bustRate < 0.5, `bust rate at wager ${wager} is ${bustRate}`);
+    assert.ok(bustRate < 0.25, `bust rate at wager ${wager} is ${bustRate}`);
   }
 });
 
-test('payout is the multiple times the wager', () => {
+test('the house wins in the end: a long session usually finishes below where it started', () => {
   for (const wager of WAGERS) {
-    assert.equal(payoutFor(0, wager), 0);
-    assert.equal(payoutFor(PAYTABLE.three.cool, wager), PAYTABLE.three.cool * wager);
+    const { median, aheadRate } = simulateSessions({ seed: 7, sessions: 5000, balance: STARTING_BALANCE, wager, spins: 300 });
+    assert.ok(median < STARTING_BALANCE, `median at wager ${wager} is ${median}`);
+    assert.ok(aheadRate < 0.5, `ahead rate at wager ${wager} is ${aheadRate}`);
   }
+});
+
+test('payout is line bets times the wager, split across the lines', () => {
+  for (const wager of WAGERS) {
+    assert.equal(wager % LINES.length, 0);
+    assert.equal(payoutFor(0, wager), 0);
+    assert.equal(payoutFor(LINES.length, wager), wager);
+    assert.equal(payoutFor(PAYTABLE.three.cool, wager), (PAYTABLE.three.cool * wager) / LINES.length);
+  }
+  assert.throws(() => payoutFor(4, 12));
 });
 
 test('random spins land on real reel positions and repeat with the same seed', () => {

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math) and 2 (the playable machine) are built. Cash Out, sound, and a saved balance are not.
+Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Features 1 (slot math), 2 (the playable machine), and 3 (five win lines) are built. Cash Out, sound, and a saved balance are not.
 
 ## Commands
 
@@ -13,22 +13,23 @@ Plain JavaScript modules on Node 20, with no dependencies and no build or lint s
 - `npm start` serves the game at http://localhost:4747 (`PORT` overrides). The page loads ES modules, so it must be served; opening `index.html` as a file does not work.
 - `npm test` runs every test (Node's built-in runner).
 - `node --test --test-name-pattern="Wild Gator"` runs tests whose name matches.
-- `npm run evidence` plays the running game in headless Chrome and rewrites the screenshots and `results.json` under `features/02-machine/evidence/`. Needs `npm start` running and Chrome installed (`CHROME` overrides the path).
+- `npm run evidence` plays the running game in headless Chrome and rewrites the screenshots and `results.json` under `features/03-more-ways/evidence/`. Needs `npm start` running and Chrome installed (`CHROME` overrides the path).
 - `npm run report` prints the measured behavior of the slot math: exact return, hit rate, prize frequencies, and simulated sessions.
 
 ## Architecture
 
-- `src/math/config.js` holds every tunable number: symbols, the three reel strips, the payout table, the big-win line, wagers, and starting balance. Odds come only from how often a symbol appears on a strip.
-- `src/math/engine.js` turns reel stops into a result. `resultAt(stops)` is deterministic and is how a chosen outcome is produced for evidence; `spin(rng)` picks random stops and calls it. It has no balance handling.
+- `src/math/config.js` holds every tunable number: symbols, the three reel strips, the five win lines, the payout table, the big-win line, wagers, and starting balance. Odds come only from how often a symbol appears on a strip.
+- Prizes are counted in line bets (`units`). A line bet is the wager divided by the number of lines, so `units / LINES.length` is the multiple of the wager, and every wager must divide evenly by the number of lines.
+- `src/math/engine.js` turns reel stops into a result. `resultAt(stops)` is deterministic and is how a chosen outcome is produced for evidence; `spin(rng)` picks random stops and calls it. A result carries a `wins` list, one entry per winning line or coin prize, each with the `cells` (`[reel, row]`) to light. It has no balance handling.
 - `src/math/analysis.js` measures the game: `exactStats()` enumerates every reel position, and the session simulator uses a seeded random source so its numbers repeat.
-- `test/math.test.js` asserts the target ranges from the feature 1 intent, so changing `config.js` can fail the tests by design. After retuning, regenerate `features/01-slot-math/evidence.md` figures with `npm run report`.
+- `test/math.test.js` asserts the target ranges from the feature 3 intent, so changing `config.js` can fail the tests by design. After retuning, rerun `npm run report` and update the newest feature's evidence. Tests and the evidence script use fixed reel stops with known results; changing the strips or lines invalidates them.
 
 - `src/game/state.js` is the token accounting: balance, wager, spin, refill. It imports the engine and draws nothing, so it is tested in Node.
 - `index.html` holds the markup and every symbol's art as inline SVG `<symbol>`s named `gg-<symbol id>`. `src/ui/main.js` wires controls to the game state and runs the spin sequence; `src/ui/reels.js` animates one reel; `src/ui/styles.css` is the look.
 
 The same engine modules run in Node and in the browser. The game state settles the balance the moment SPIN is pressed; the screen shows the wager leaving at once and the win arriving after the reels stop.
 
-The game is drawn at a fixed 390 x 844 and scaled to the window, so layout values are in pixels of that design size. `--cell` in the CSS and `CELL` in `reels.js` must match.
+The game is drawn at a fixed 390 x 844 and scaled to the window, so layout values are in pixels of that design size. `--cell` in the CSS and `CELL` in `reels.js` must match, and `CELL_X`/`CELL_Y` in `main.js` are the cell centres the win lines are drawn through.
 
 For evidence, `?stops=5,3,14` forces every spin to those reel positions, `&autospin=1` spins on load, and `&speed=4` shortens the reel timings.
 
@@ -66,6 +67,7 @@ The game design is expected to be harder than the code: payout table, symbol wei
 
 ## Hard boundaries
 
+- Spins are honest. Every result is an independent draw from the reels; the game must never read the balance or history to choose an outcome or steer a player toward a loss. The house edge comes only from the payout table.
 - Tokens are virtual game credits. No real money, payments, purchases, credit cards, advertising, or external gambling platform.
 - Cash Out transfers nothing. It shows a playful message such as "See Mark to collect your winnings." and keeps the request and token amount visible so it can be settled in person.
 - No accounts, multiplayer, social features, tournaments, complex bonus systems, or backend that the game does not strictly need.

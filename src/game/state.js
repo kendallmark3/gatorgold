@@ -40,7 +40,7 @@ export function createGame({ balance = STARTING_BALANCE, wager = WAGERS[1] } = {
       if (!this.canSpin()) throw new Error(`Balance ${balance} cannot cover a wager of ${wager}`);
       const staked = wager;
       const result = stops ? resultAt(stops) : randomSpin(rng);
-      const payout = payoutFor(result.multiplier, staked);
+      const payout = payoutFor(result.units, staked);
       const balanceAfterWager = balance - staked;
       balance = balanceAfterWager + payout;
       clampWager();

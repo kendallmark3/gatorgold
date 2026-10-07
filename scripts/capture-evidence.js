@@ -1,4 +1,4 @@
-// Plays the running game in headless Chrome and captures evidence for feature 2:
+// Plays the running game in headless Chrome and captures evidence for feature 3:
 // screenshots plus results.json. Start the game first with `npm start`, then run
 // `npm run evidence`. Set CHROME to the browser binary if it is not in the default
 // macOS location.
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const OUT = fileURLToPath(new URL('../features/02-machine/evidence/', import.meta.url));
+const OUT = fileURLToPath(new URL('../features/03-more-ways/evidence/', import.meta.url));
 const BASE = `http://localhost:${process.env.PORT || 4747}/`;
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 mkdirSync(OUT, { recursive: true });
@@ -76,7 +76,8 @@ const state = () => js(`({
   spin: document.getElementById('spin').textContent,
   spinDisabled: document.getElementById('spin').disabled,
   lit: [...document.querySelectorAll('.cell.win')].length,
-  line: [...document.querySelectorAll('.reel')].map((r) => r.querySelectorAll('.sym')[1]?.dataset.symbol),
+  linesDrawn: document.querySelectorAll('#lines .glow').length,
+  view: [...document.querySelectorAll('.reel')].map((r) => [...r.querySelectorAll('.sym')].slice(0, 3).map((x) => x.dataset.symbol)),
   bigwin: !document.getElementById('bigwin').hidden,
 })`);
 const click = (id) => js(`document.getElementById('${id}').click()`);
@@ -106,11 +107,13 @@ await shot('01-at-rest');
 report.atRest = await state();
 
 const cases = {
-  '02-loss': '0,1,1',
-  '03-coin': '0,0,1',
-  '04-three-gators': '1,1,3',
-  '05-three-baby': '1,4,3',
-  '07-near-miss': '16,20,1',
+  '02-loss': '0,2,3',
+  '03-two-coins': '0,0,3',
+  '04-gator-line': '1,1,3',
+  '05-diagonal-gators': '2,1,2',
+  '06-three-baby': '1,4,3',
+  '07-several-lines': '0,0,24',
+  '09-near-miss': '16,20,0',
 };
 for (const [name, stops] of Object.entries(cases)) {
   await open(`?stops=${stops}`);
@@ -121,24 +124,16 @@ for (const [name, stops] of Object.entries(cases)) {
   report[name] = { stops, stopTimes, ...(await state()) };
 }
 
-// Mid-spin frame.
-await open('?stops=1,1,3');
-await click('spin');
-await sleep(650);
-await shot('08-mid-spin');
-await settle();
-
 // Big win: catch the celebration, then the settled screen.
-await open('?stops=5,3,14');
-await click('wagerUp');
+await open('?stops=6,4,7');
 const bigTimes = await timedSpin();
 await sleep(1500);
-await shot('06-big-win');
+await shot('08-big-win');
 const during = await state();
 await settle();
 await sleep(300);
-await shot('06-big-win-after');
-report['06-big-win'] = { stops: '5,3,14', stopTimes: bigTimes, celebrationShowing: during.bigwin, ...(await state()) };
+await shot('08-big-win-after');
+report['08-big-win'] = { stops: '6,4,7', stopTimes: bigTimes, celebrationShowing: during.bigwin, ...(await state()) };
 
 // Wager control.
 await open();
@@ -152,14 +147,14 @@ report.wagerSteps = wagers;
 // Payout table.
 await click('paysOpen');
 await sleep(300);
-await shot('09-pays');
+await shot('10-pays');
 report.paysRows = await js(`document.querySelectorAll('.pays-row').length`);
 await js(`document.getElementById('pays').close()`);
 
 // Random play: check the balance after every spin.
 await open('?speed=8');
 let prev = (await state()).balance;
-let mismatches = 0, winsSeen = 0, spins = 0;
+let mismatches = 0, winsSeen = 0, smallWins = 0, spins = 0;
 for (let i = 0; i < 60; i++) {
   if (i === 20) await click('wagerUp');
   if (i === 40) { await click('wagerDown'); await click('wagerDown'); }
@@ -171,19 +166,20 @@ for (let i = 0; i < 60; i++) {
   const after = await state();
   spins++;
   if (after.win > 0) winsSeen++;
+  if (after.win > 0 && after.win < before.wager) smallWins++;
   if (after.balance !== prev - before.wager + after.win) mismatches++;
   if ((after.win > 0) !== (after.lit > 0)) mismatches++;
   prev = after.balance;
 }
-report.randomPlay = { spins, winsSeen, mismatches, endBalance: prev };
+report.randomPlay = { spins, winsSeen, smallWins, mismatches, endBalance: prev };
 
 // Run out of tokens, then refill.
-await open('?stops=0,1,1&speed=10');
+await open('?stops=0,2,3&speed=10');
 await click('wagerUp');
 let guard = 0;
 while ((await state()).spin === 'SPIN' && guard++ < 60) { await click('spin'); await settle(); }
 await sleep(200);
-await shot('10-out-of-tokens');
+await shot('11-out-of-tokens');
 const broke = await state();
 await click('spin');
 await sleep(900);
