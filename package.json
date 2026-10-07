@@ -1,0 +1,9 @@
+{
+  "name": "gatorgold",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "report": "node scripts/math-report.js"
+  }
+}

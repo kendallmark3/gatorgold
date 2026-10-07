@@ -4,9 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. The repository is pre-implementation: it holds the intent, a README, and the Claude Code starter files. There is no application code, no chosen stack, and no build, lint, or test command.
+Gator Gold is an alligator-themed slot game for one player, Stephanie, played with virtual tokens. Feature 1 (slot math) is built. There is no screen or playable game yet; that is feature 2.
 
-When code exists, replace this section with the real commands and architecture. Do not describe a stack here before one has been chosen.
+## Commands
+
+Plain JavaScript modules on Node 20, with no dependencies and no build or lint step.
+
+- `npm test` runs every test (Node's built-in runner).
+- `node --test --test-name-pattern="Wild Gator"` runs tests whose name matches.
+- `npm run report` prints the measured behavior of the slot math: exact return, hit rate, prize frequencies, and simulated sessions.
+
+## Architecture
+
+- `src/math/config.js` holds every tunable number: symbols, the three reel strips, the payout table, the big-win line, wagers, and starting balance. Odds come only from how often a symbol appears on a strip.
+- `src/math/engine.js` turns reel stops into a result. `resultAt(stops)` is deterministic and is how a chosen outcome is produced for evidence; `spin(rng)` picks random stops and calls it. It has no balance handling.
+- `src/math/analysis.js` measures the game: `exactStats()` enumerates every reel position, and the session simulator uses a seeded random source so its numbers repeat.
+- `test/math.test.js` asserts the target ranges from the feature 1 intent, so changing `config.js` can fail the tests by design. After retuning, regenerate `features/01-slot-math/evidence.md` figures with `npm run report`.
+
+The engine is written as browser-compatible modules so the game screen can import it unchanged.
+
+Each feature has a folder under `features/` with its `intent.md` and, once proven, `evidence.md`. Each feature is built on its own `feature/NN-name` branch. Mark pushes; do not push unless asked.
 
 ## Sources of truth
 
@@ -27,7 +44,7 @@ Work is feature by feature, one at a time, using progressive intent:
 
 Do not design or build a feature ahead of its turn. v2 is deliberately undesigned: it comes from Stephanie's reaction to playing v1.
 
-Do not write code until Mark asks for it. Earlier sessions were explicitly reasoning and documentation only.
+By the end of feature 2 Mark wants a game that actually works: spin, watch the reels, and see a win when three gators land.
 
 ## What matters most
 

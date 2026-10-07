@@ -2,7 +2,7 @@
 
 A playful, alligator-themed slot game built for Stephanie. It should feel like a real animated slot machine, played with virtual tokens only.
 
-**Status:** Progressive Intent v1, pre-implementation. No code has been written yet. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
+**Status:** Progressive Intent v1. Feature 1 (slot math) is built and proven; there is no playable game yet. The source of truth is [intent.md](intent.md); this README summarizes it and records what still needs deciding.
 
 ## What it is
 
@@ -58,12 +58,12 @@ No feature is designed ahead of its turn. [intent.md](intent.md) stays the overa
 
 ### Proposed feature order
 
-A proposal, not yet agreed. Each line is one feature with its own intent.
+Each line is one feature with its own intent under [features/](features/). Features 1 and 2 are agreed; the rest are a proposal.
 
 | # | Feature | What it proves |
 | --- | --- | --- |
-| 1 | Slot math | Symbols, weights, and payout table give the right hit frequency and return, shown by simulation |
-| 2 | The machine | Reels spin, build anticipation, and stop the way a casino slot does |
+| 1 | Slot math (done) | Symbols, weights, and payout table give the right hit frequency and return, shown by simulation. See the [evidence](features/01-slot-math/evidence.md) |
+| 2 | The machine | A game that actually works: Mark can spin, watch the reels roll and stop, and see a win when three gators land. Good enough to play |
 | 3 | Token play | Balance, wager, and spin work together and the accounting is always correct |
 | 4 | Wins | Winning combinations are obvious, with a celebration and a bigger one for large wins |
 | 5 | Gators | The characters have personality and react to what happens |
